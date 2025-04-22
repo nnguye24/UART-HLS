@@ -11,7 +11,7 @@
 
 // Defining the Sizes for the datapath
 #define DATA_W 8       // 8-bit datapath for UART
-#define ADDR_W 6       // Address width to address 40 bytes of RAM
+#define ADDR_W 6       // Address width to address each byte location(40 of them) 
 
 // RAM and buffer sizes
 #define TX_BUFFER_SIZE 16    // 16 bytes transmit buffer

@@ -29,11 +29,8 @@ SC_MODULE(memory_map) {
     sc_in<bool> rx_buffer_empty;
     sc_in<bool> error_indicator;
     
-    // Memory arrays for local buffers
-    sc_signal<sc_uint<DATA_W>> local_tx_buffer[TX_BUFFER_SIZE];
-    sc_signal<sc_uint<DATA_W>> local_rx_buffer[RX_BUFFER_SIZE];
-    sc_signal<sc_uint<DATA_W>> config_reg[CONFIG_REG_SIZE];
-    sc_signal<sc_uint<DATA_W>> status_reg[STATUS_REG_SIZE];
+    // Memory array - single array for all memory
+    sc_bv<DATA_W> Memory[RAM_SIZE];
     
     // Constructor
     SC_CTOR(memory_map) {

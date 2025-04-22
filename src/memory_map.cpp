@@ -6,89 +6,74 @@
  * Memory map implementation for UART controller
  **************************************************************/
 
-#include "memory_map.h"
-#include <iostream>
-
-using namespace std;
-
-// Reset method to initialize memory map to default state
-void memory_map::reset() {
-    // Initialize config registers to default values
-    for (int i = 0; i < CONFIG_REG_SIZE; i++) {
-        config_reg[i].write(0);
-    }
-    
-    // Initialize status registers
-    for (int i = 0; i < STATUS_REG_SIZE; i++) {
-        status_reg[i].write(0);
-    }
-    
-    // Initialize buffers
-    for (int i = 0; i < TX_BUFFER_SIZE; i++) {
-        local_tx_buffer[i].write(0);
-    }
-    
-    for (int i = 0; i < RX_BUFFER_SIZE; i++) {
-        local_rx_buffer[i].write(0);
-    }
-    
-    // Initialize outputs
-    data_out.write(0);
-    dp_data_out.write(0);
-    dp_addr.write(0);
-    dp_write_enable.write(false);
-}
-
-// Memory access implementation
-void memory_map::memory_access() {
-    // Reset logic
-    if (rst.read()) {
-        reset();
-        return;
-    }
-    
-    // Memory access logic
-    if (chip_select.read()) {
-        // Map address to appropriate memory region
-        
-        // Handle read operations
-        if (!read_write.read()) {
-            // Read operation
-            // Address decoding logic
-            // Set data_out based on address
-        }
-        // Handle write operations
-        else if (read_write.read() && write_enable.read()) {
-            // Write operation
-            // Address decoding logic
-            // Write data_in to appropriate location
-        }
-    }
-}
-
-// Status update implementation
-void memory_map::status_update() {
-    // Update status registers based on status signals
-    
-    // Line status register update
-    sc_uint<DATA_W> line_status = status_reg[0].read();
-    
-    // Set bits based on status signals
-    if (tx_buffer_full.read()) {
-        line_status |= (1 << 6); // Bit 6 for TX buffer full
-    } else {
-        line_status &= ~(1 << 6);
-    }
-    
-    if (rx_buffer_empty.read()) {
-        line_status |= (1 << 0); // Bit 0 for RX buffer empty
-    } else {
-        line_status &= ~(1 << 0);
-    }
-    
-    if (error_indicator.read()) {
-        line_status |= (1 << 3); // Bit 3 for error indicator
-    }
-    
-    status_reg[0].write(line_status);
-}
+ #include "memory_map.h"
+ #include <iostream>
+ 
+ using namespace std;
+ 
+ void memory_map::reset() {
+     // Initialize all memory to zero
+     for (int i = 0; i < RAM_SIZE; ++i) {
+         Memory[i] = 0;
+     }
+     
+     // Initialize outputs
+     data_out.write(0);
+     dp_data_out.write(0);
+     dp_addr.write(0);
+     dp_write_enable.write(false);
+ }
+ 
+ void memory_map::memory_access() {
+     // Reset logic
+     if (rst.read()) {
+         reset();
+         return;
+     }
+     
+     // Memory access logic when chip is selected
+     if (chip_select.read()) {
+         sc_uint<ADDR_W> selected_addr = addr.read();
+         
+         // Handle read operations
+         if (!read_write.read()) {
+             // Read operation
+             if (selected_addr < RAM_SIZE) {
+                 data_out.write(Memory[selected_addr]);
+             }
+         }
+         // Handle write operations
+         else if (write_enable.read()) {
+             // Write operation
+             if (selected_addr < RAM_SIZE) {
+                 Memory[selected_addr] = data_in.read();
+             }
+         }
+     }
+     
+     // Update datapath output
+     dp_data_out.write(Memory[dp_addr.read()]);
+ }
+ 
+ void memory_map::status_update() {
+     // Update memory status registers based on input signals
+     
+     // Status register at offset 38 (first status register)
+     sc_bv<DATA_W> status = 0;
+     
+     // Set bits based on status signals
+     if (tx_buffer_full.read()) {
+         status[0] = 1; // Bit 0 for TX buffer full
+     }
+     
+     if (rx_buffer_empty.read()) {
+         status[1] = 1; // Bit 1 for RX buffer empty
+     }
+     
+     if (error_indicator.read()) {
+         status[2] = 1; // Bit 2 for error indicator
+     }
+     
+     // Write to status register in memory (addr 38)
+     Memory[38] = status;
+ }
