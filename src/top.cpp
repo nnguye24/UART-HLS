@@ -11,5 +11,3 @@
 
 using namespace std;
 
-// No additional implementation needed for top module
-// All connections are made in the constructor in the header file
