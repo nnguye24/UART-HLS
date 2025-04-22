@@ -5,7 +5,8 @@
 #include "sizes.h"
 #include "stratus_hls.h" // Cadence Stratus
 
-SC_MODULE(memory_map) {
+class memory_map {
+    public:
     // Clock and reset
     sc_in<bool> clk;
     sc_in<bool> rst;
@@ -33,21 +34,19 @@ SC_MODULE(memory_map) {
     sc_bv<DATA_W> Memory[RAM_SIZE];
     
     // Constructor
-    SC_CTOR(memory_map) {
-        // Register processes
-        SC_METHOD(memory_access);
-        sensitive << clk.pos() << rst;
-        
-        SC_METHOD(status_update);
-        sensitive << tx_buffer_full << rx_buffer_empty << error_indicator;
-    }
+    memory_map();
     
     // Reset method
     void reset();
     
-    // Declarations for processes
-    void memory_access();
-    void status_update();
+    // Declaration
+    void compute();
+    void commit();
+
+    private:
+    // Temporary values computed in compute()
+    sc_bv<DATA_W> next_out_dout;
+    sc_bv<4> next_out_io_out;
 };
 
 #endif
