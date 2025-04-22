@@ -30,6 +30,14 @@ SC_MODULE(controller) {
     sc_in<bool> parity_error;
     sc_in<bool> framing_error;
     sc_in<bool> overrun_error;
+    sc_in<bool> rx_in;  // Serial input line for detecting start bit
+    
+    // Internal signals and counters
+    int bit_counter;    // Counts bits transmitted/received
+    bool parity_value;  // Calculated parity value
+    bool parity_enabled; // Configuration parameter
+    bool tx_done;       // Transmission complete flag
+    bool rx_done;       // Reception complete flag
     
     // Constructor
     SC_CTOR(controller) {
@@ -39,6 +47,9 @@ SC_MODULE(controller) {
         
         SC_METHOD(output_logic);
         sensitive << state;
+        
+        // Default configuration
+        parity_enabled = false;
     }
     
     // Reset method
