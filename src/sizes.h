@@ -10,7 +10,8 @@
 #define __SIZES_H__
 
 // Defining the Sizes for the datapath
-#define DATA_W 8       // 8-bit datapath for UART
+#define DATA_W 9       // 8-bit datapath for UART 
+// Possibly DATA_W 9 for parity.
 #define ADDR_W 6       // Address width to address each byte location(40 of them) 
 
 // RAM and buffer sizes

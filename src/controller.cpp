@@ -103,7 +103,7 @@
        // Update bit counter in commit phase
        // Transition based on bit count
        tx_data_next = true;
-       if (bit_counter >= 7) {  // 8 bits (0-7)
+       if (bit_counter >= 7) {  // 7 should be a variable, changes depending on parity enable
          // All 8 data bits sent
          if (parity_enabled) {
            next_state = TX_PARITY_BIT;
