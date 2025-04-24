@@ -13,6 +13,7 @@
  
  controller::controller() {
    // Set default configuration
+   // these should be configured by a configuration register.
    parity_enabled = false;
    parity_even = true;  // Default to even parity
    
@@ -329,7 +330,7 @@
    }
  }
  
- // Helper method to calculate parity
+ // method to calculate parity
  bool controller::calculate_parity(sc_bv<8> data) {
    int count = 0;
    
