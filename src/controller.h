@@ -7,26 +7,13 @@
 class controller {
 public:
   // Inputs
+  bool clk;
   bool rst;
   bool tx_buffer_full;
   bool rx_buffer_empty;
-  bool parity_error;
-  bool framing_error;
-  bool overrun_error;
-  bool rx_in;  // Serial input line for detecting start bit
-
-  // FSM state
-  sc_bv<4> state;
-  sc_bv<4> next_state;
+  bool rx_in;  // Serial input line
   
-  // Internal signals and counters
-  int bit_counter;    // Counts bits transmitted/received
-  bool parity_value;  // Calculated parity value
-  bool parity_enabled; // Configuration parameter
-  bool tx_done;       // Transmission complete flag
-  bool rx_done;       // Reception complete flag
-
-  // Outputs
+  // Output control signals
   bool out_load_tx;
   bool out_tx_start;
   bool out_tx_data;
@@ -37,6 +24,34 @@ public:
   bool out_rx_parity;
   bool out_rx_stop;
   bool out_error_handle;
+  
+  // Output error signals
+  bool out_parity_error;
+  bool out_framing_error;
+  bool out_overrun_error;
+
+  // Configuration
+  bool parity_enabled;
+  bool parity_even;  // Even (true) or odd (false) parity
+
+  // TX FSM state
+  sc_bv<3> tx_state;
+  sc_bv<3> tx_next_state;
+  int tx_bit_counter;      // Counts bits transmitted
+  bool tx_parity_value;    // Calculated parity value
+  bool tx_done;            // Transmission complete flag
+  bool tx_data_register;   // Current bit being transmitted
+
+  // RX FSM state
+  sc_bv<3> rx_state;
+  sc_bv<3> rx_next_state;
+  int rx_bit_counter;      // Counts bits received
+  bool rx_parity_value;    // Calculated parity value
+  bool rx_done;            // Reception complete flag
+  sc_bv<8> rx_shift_reg;   // Shift register to store received bits
+  bool rx_bit_value;       // Current received bit
+
+
 
   // Constructor
   controller();
@@ -44,22 +59,41 @@ public:
   // Reset method
   void reset();
   
-  // Methods matching albacore pattern
+  // Main compute/commit methods
   void compute();
   void commit();
+  
+  // Separate compute/commit methods for TX and RX
+  void compute_tx();
+  void compute_rx();
+  void commit_tx();
+  void commit_rx();
+  
+  // Helper methods for error detection
+  bool calculate_parity(sc_bv<8> data);
 
 private:
-  // Latched outputs from compute()
+  // Latched TX outputs from compute_tx()
   bool load_tx_next;
   bool tx_start_next;
   bool tx_data_next;
   bool tx_parity_next;
   bool tx_stop_next;
+
+  // Latched RX outputs from compute_rx()
   bool rx_start_next;
   bool rx_data_next;
   bool rx_parity_next;
   bool rx_stop_next;
   bool error_handle_next;
+  
+  // Latched error outputs
+  bool parity_error_next;
+  bool framing_error_next;
+  bool overrun_error_next;
+
 };
+
+
 
 #endif
