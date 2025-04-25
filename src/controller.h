@@ -7,7 +7,6 @@
 class controller {
 public:
   // Inputs
-  bool clk;
   bool rst;
   bool tx_buffer_full;
   bool rx_buffer_empty;
