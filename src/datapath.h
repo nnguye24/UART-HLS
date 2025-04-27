@@ -30,6 +30,7 @@
      bool rx_parity;
      bool rx_stop;
      bool error_handle;
+     bool rx_read;
      
      // Status signals (outputs to controller)
      bool tx_buffer_full;
@@ -102,6 +103,8 @@
      
      // Internal next-state values for RX (computed in compute_rx phase)
      bool next_rx_buffer_empty;
+     unsigned int next_rx_buf_head;
+     unsigned int next_rx_buf_tail;
      bool next_parity_error;
      bool next_framing_error;
      bool next_overrun_error;

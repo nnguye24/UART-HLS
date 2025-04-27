@@ -22,6 +22,7 @@ public:
   bool out_rx_data;
   bool out_rx_parity;
   bool out_rx_stop;
+  bool out_rx_read;
   bool out_error_handle;
   
   // Output error signals

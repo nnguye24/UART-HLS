@@ -202,6 +202,7 @@
    parity_error_next = false;
    framing_error_next = false;
    overrun_error_next = false;
+
    
    // State transition logic
    switch(rx_state.to_uint()) {

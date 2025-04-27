@@ -67,6 +67,8 @@ void datapath::compute_rx() {
     next_framing_error = false;
     next_overrun_error = false;
     next_rx_shift_register = rx_shift_register;
+
+    
     
     // Handle RX operations based on control signals
     if (rx_start) {
@@ -78,7 +80,8 @@ void datapath::compute_rx() {
     
     if (rx_data) {
         // Receive data bit
-        next_rx_shift_register = 
+        next_rx_shift_register = (rx_shift_register >> 1);
+        next_rx_shift_register[DATA_W-1] = rx_in;
     }
     
     if (rx_parity) {
@@ -93,17 +96,15 @@ void datapath::compute_rx() {
         // Verify stop bit is 1
         if (rx_in != 1) {
             next_framing_error = true;
-        } else {
+        }
+        // Check for buffer overrun before storing
+        else if (((rx_buf_head + 1) % RX_BUFFER_SIZE) == rx_buf_tail) {
+            // Buffer full → flag overrun, don’t store new byte
+            next_overrun_error = true;
+        }
+        else {
             // Store received data in buffer
             store_rx_register();
-            
-            // Check for buffer overrun
-            // rx_buf_head is where the next byte will be stored
-            // rx_buf_tail is where the next byte will be read
-            //
-            if (((rx_buf_head + 1) % RX_BUFFER_SIZE) == rx_buf_tail) {
-                next_overrun_error = true;
-            }
         }
     }
     
@@ -112,8 +113,16 @@ void datapath::compute_rx() {
         
     }
     
-    // Update rx_buffer_empty status
-    next_rx_buffer_empty = rx_buffer_check();
+    // CPU/host is reading one byte:
+    if (rx_read && !rx_buffer_empty) {
+        data_out            = rx_buffer[rx_buf_tail];
+        next_rx_buf_tail    = (rx_buf_tail + 1) % RX_BUFFER_SIZE;
+    } else {
+        next_rx_buf_tail    = rx_buf_tail;
+    }
+
+    // recompute empty flag
+    next_rx_buffer_empty = (next_rx_buf_head == next_rx_buf_tail);
 }
 
 // Commit methods would update actual registers based on next-state values
@@ -144,6 +153,8 @@ void datapath::commit_rx() {
     framing_error = next_framing_error;
     overrun_error = next_overrun_error;
     rx_shift_register = next_rx_shift_register;
+    rx_buf_head = next_rx_buf_head;
+    rx_buf_tail = next_rx_buf_tail;
     
     // Update RX bit counter
     if (rx_data) {
