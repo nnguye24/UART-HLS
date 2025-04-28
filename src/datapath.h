@@ -11,7 +11,6 @@
  
  #include "systemc.h"
  #include "sizes.h"
- #include "stratus_hls.h"
  
  class datapath {
  public:
@@ -38,6 +37,12 @@
      bool parity_error;
      bool framing_error;
      bool overrun_error;
+     
+     // Configuration outputs to controller
+     bool ctrl_parity_enabled;
+     bool ctrl_parity_even;
+     sc_uint<3> ctrl_data_bits;
+     sc_uint<2> ctrl_stop_bits;
      
      // External interface
      bool rx_in;                       // Serial input
@@ -80,6 +85,10 @@
      void compute();
      void commit();
      
+     // Configuration handling
+     void update_configuration();
+     void sync_controller_config();
+     
      // Separate compute/commit methods for TX and RX
      void compute_tx();
      void compute_rx();
@@ -89,8 +98,10 @@
      // Status methods
      bool tx_buffer_check();
      bool rx_buffer_check();
+     
      // Parity method
      bool calculate_parity(sc_bv<8> data);
+     
      // Accessing Memory Method
      void load_tx_register();
      void store_rx_register();

@@ -7,10 +7,22 @@
 class controller {
 public:
   // Inputs
+  bool clk;
   bool rst;
   bool tx_buffer_full;
   bool rx_buffer_empty;
   bool rx_in;  // Serial input line
+  
+  // Error inputs
+  bool parity_error;
+  bool framing_error;
+  bool overrun_error;
+  
+  // Configuration inputs from datapath
+  bool parity_enabled;        // Parity enabled flag
+  bool parity_even;           // Even parity (1) or odd parity (0)
+  sc_uint<3> data_bits;       // Number of data bits (5-8)
+  sc_uint<2> stop_bits;       // Number of stop bits (1, 1.5, 2)
   
   // Output control signals
   bool out_load_tx;
@@ -25,33 +37,22 @@ public:
   bool out_rx_read;
   bool out_error_handle;
   
-  // Output error signals
-  bool out_parity_error;
-  bool out_framing_error;
-  bool out_overrun_error;
-
-  // Configuration
-  bool parity_enabled;
-  bool parity_even;  // Even (true) or odd (false) parity
-
   // TX FSM state
-  sc_bv<3> tx_state;
-  sc_bv<3> tx_next_state;
+  sc_bv<4> tx_state;
+  sc_bv<4> tx_next_state;
   int tx_bit_counter;      // Counts bits transmitted
   bool tx_parity_value;    // Calculated parity value
   bool tx_done;            // Transmission complete flag
   bool tx_data_register;   // Current bit being transmitted
 
   // RX FSM state
-  sc_bv<3> rx_state;
-  sc_bv<3> rx_next_state;
+  sc_bv<4> rx_state;
+  sc_bv<4> rx_next_state;
   int rx_bit_counter;      // Counts bits received
   bool rx_parity_value;    // Calculated parity value
   bool rx_done;            // Reception complete flag
   sc_bv<8> rx_shift_reg;   // Shift register to store received bits
   bool rx_bit_value;       // Current received bit
-
-
 
   // Constructor
   controller();
@@ -86,14 +87,6 @@ private:
   bool rx_parity_next;
   bool rx_stop_next;
   bool error_handle_next;
-  
-  // Latched error outputs
-  bool parity_error_next;
-  bool framing_error_next;
-  bool overrun_error_next;
-
 };
-
-
 
 #endif

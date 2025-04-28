@@ -12,11 +12,6 @@
  using namespace std;
  
  controller::controller() {
-   // Set default configuration
-   // these should be configured by a configuration register.
-   parity_enabled = false;
-   parity_even = true;  // Default to even parity
-   
    // Initialize controller
    reset();
  }
@@ -53,11 +48,6 @@
    rx_stop_next = false;
    error_handle_next = false;
    
-   // Reset error latched outputs
-   parity_error_next = false;
-   framing_error_next = false;
-   overrun_error_next = false;
-   
    // Reset actual outputs
    out_load_tx = false;
    out_tx_start = false;
@@ -69,11 +59,7 @@
    out_rx_parity = false;
    out_rx_stop = false;
    out_error_handle = false;
-   
-   // Reset error outputs
-   out_parity_error = false;
-   out_framing_error = false;
-   out_overrun_error = false;
+   out_rx_read = false;
  }
  
  void controller::compute() {
@@ -127,9 +113,9 @@
        break;
        
      case TX_DATA_BITS:
-       // Transition based on bit count
+       // Transition based on bit count and configured data bits
        tx_data_next = true;
-       if (tx_bit_counter >= 7) {  // All 8 data bits sent
+       if (tx_bit_counter >= data_bits - 1) {  // Adjust for configured data bits
          if (parity_enabled) {
            tx_next_state = TX_PARITY_BIT;
          } else {
@@ -147,12 +133,20 @@
        break;
        
      case TX_STOP_BIT:
-       // Transition from STOP_BIT state
+       // Transition from STOP_BIT state - handle multiple stop bits if configured
        tx_stop_next = true;
-       if (!tx_buffer_full) {
-         tx_next_state = TX_LOAD;  // More data to transmit
+       
+       // Check if we need a second stop bit
+       if (stop_bits == 2 && tx_bit_counter == 0) {
+         tx_bit_counter = 1;  // Mark that we're sending the second stop bit
+         tx_next_state = TX_STOP_BIT;  // Stay in stop bit state
        } else {
-         tx_next_state = TX_IDLE;  // Return to idle
+         // Done with all stop bits
+         if (!tx_buffer_full) {
+           tx_next_state = TX_LOAD;  // More data to transmit
+         } else {
+           tx_next_state = TX_IDLE;  // Return to idle
+         }
        }
        break;
        
@@ -183,8 +177,9 @@
      tx_bit_counter = 0;
    }
    
-   if (tx_state == TX_STOP_BIT) {
+   if (tx_state == TX_STOP_BIT && tx_next_state != TX_STOP_BIT) {
      tx_done = true;
+     tx_bit_counter = 0;  // Reset counter for next transmission
    } else {
      tx_done = false;
    }
@@ -197,12 +192,6 @@
    rx_parity_next = false;
    rx_stop_next = false;
    error_handle_next = false;
-   
-   // Reset error flags
-   parity_error_next = false;
-   framing_error_next = false;
-   overrun_error_next = false;
-
    
    // State transition logic
    switch(rx_state.to_uint()) {
@@ -228,13 +217,13 @@
        break;
        
      case RX_DATA_BITS:
-       // Transition from DATA_BITS state
+       // Transition from DATA_BITS state based on configured data bits
        rx_data_next = true;
        
        // Store the current bit in the shift register
        rx_bit_value = rx_in;
        
-       if (rx_bit_counter >= 7) {  // All 8 data bits received
+       if (rx_bit_counter >= data_bits - 1) {  // Adjust for configured data bits
          // Calculate expected parity for received data
          rx_parity_value = calculate_parity(rx_shift_reg);
          
@@ -255,7 +244,6 @@
        // Check if received parity matches calculated parity
        if ((rx_in && !rx_parity_value) || (!rx_in && rx_parity_value)) {
          // Parity error detected
-         parity_error_next = true;
          rx_next_state = RX_ERROR_HANDLING;
        } else {
          rx_next_state = RX_STOP_BIT;
@@ -269,16 +257,18 @@
        // Check for valid stop bit (should be 1)
        if (rx_in != 1) {
          // Framing error - no stop bit detected
-         framing_error_next = true;
          rx_next_state = RX_ERROR_HANDLING;
        } else {
-         // Check for overrun condition
-         if (!rx_buffer_empty) {
-           // Previous data hasn't been read yet
-           overrun_error_next = true;
-           rx_next_state = RX_ERROR_HANDLING;
+         // Check for second stop bit if configured
+         if (stop_bits == 2 && rx_bit_counter == 0) {
+           rx_bit_counter = 1;  // Mark that we're checking the second stop bit
+           rx_next_state = RX_STOP_BIT;  // Stay in stop bit state
          } else {
+           // All stop bits received correctly
            rx_next_state = RX_IDLE;
+           
+           // Signal to read the received data
+           out_rx_read = true;
          }
        }
        break;
@@ -307,11 +297,6 @@
    out_rx_stop = rx_stop_next;
    out_error_handle = error_handle_next;
    
-   // Update error outputs
-   out_parity_error = parity_error_next;
-   out_framing_error = framing_error_next;
-   out_overrun_error = overrun_error_next;
-   
    // Update RX internal counters/flags
    if (rx_state == RX_DATA_BITS) {
      // Shift in the received bit
@@ -324,14 +309,13 @@
      rx_shift_reg = 0;
    }
    
-   if (rx_state == RX_STOP_BIT && rx_in == 1) {
+   if (rx_state == RX_STOP_BIT && rx_next_state == RX_IDLE) {
      rx_done = true;
    } else {
      rx_done = false;
    }
  }
  
- // method to calculate parity
  bool controller::calculate_parity(sc_bv<8> data) {
    int count = 0;
    
