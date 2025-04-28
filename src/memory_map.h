@@ -6,26 +6,24 @@
 
 class memory_map {
 public:
-    // Interface to external system
-    sc_in<bool> clk;
-    sc_in<bool> rst;
-    sc_in<sc_uint<DATA_W>> data_in;
-    sc_out<sc_uint<DATA_W>> data_out;
-    sc_in<sc_uint<ADDR_W>> addr;
-    sc_in<bool> chip_select;
-    sc_in<bool> read_write;
-    sc_in<bool> write_enable;
+    bool rst;
+    <sc_uint<DATA_W>> data_in;
+    <sc_uint<DATA_W>> data_out;
+    <sc_uint<ADDR_W>> addr;
+    bool chip_select;
+    bool read_write;
+    bool write_enable;
     
     // Interface to datapath
-    sc_out<sc_uint<DATA_W>> dp_data_out;
-    sc_in<sc_uint<DATA_W>> dp_data_in;
-    sc_in<sc_uint<ADDR_W>> dp_addr;
-    sc_in<bool> dp_write_enable;
+    <sc_uint<DATA_W>> dp_data_out;
+    <sc_uint<DATA_W>> dp_data_in;
+    <sc_uint<ADDR_W>> dp_addr;
+    bool dp_write_enable;
     
     // Status signals
-    sc_in<bool> tx_buffer_full;
-    sc_in<bool> rx_buffer_empty;
-    sc_in<bool> error_indicator;
+    bool tx_buffer_full;
+    bool rx_buffer_empty;
+    bool error_indicator;
     
     // Memory array - single array for all memory
     sc_uint<DATA_W> Memory[RAM_SIZE];
