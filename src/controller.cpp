@@ -50,6 +50,7 @@
    error_handle_next = false;
    
    // Reset actual outputs
+   out_load_tx2 = false;
    out_load_tx = false;
    out_tx_start = false;
    out_tx_data = false;
@@ -171,6 +172,7 @@
    
    // Update TX outputs
    out_load_tx = load_tx_next;
+   out_load_tx2 = load_tx2_next;
    out_tx_start = tx_start_next;
    out_tx_data = tx_data_next;
    out_tx_parity = tx_parity_next;
