@@ -49,19 +49,22 @@
      bool tx_out;                      // Serial output
      sc_bv<DATA_W> data_in;            // Data input from memory map
      sc_bv<DATA_W> data_out;           // Data output to memory map
-     sc_bv<ADDR_W> addr;               // Address from memory map
+     sc_bv<ADDR_W> addr;               // Address to memory map
+     
+     // Interface to memory map for direct writes
+     sc_bv<DATA_W> dp_data_in;         // Data to write to memory
+     sc_bv<ADDR_W> dp_addr;            // Address to write to
+     bool dp_write_enable;             // Write enable signal
      
      // Internal registers
-     sc_bv<DATA_W> tx_shift_register;      // Transmit shift register
-     sc_bv<DATA_W> rx_shift_register;      // Receive shift register
-     sc_bv<8> tx_buffer[TX_BUFFER_SIZE];   // Transmit buffer
-     sc_bv<8> rx_buffer[RX_BUFFER_SIZE];   // Receive buffer
+     sc_bv<DATA_W> tx_shift_register;  // Transmit shift register
+     sc_bv<DATA_W> rx_shift_register;  // Receive shift register
      
      // Buffer pointers and counters
-     unsigned int tx_buf_head;    // Head pointer for TX buffer
-     unsigned int tx_buf_tail;    // Tail pointer for TX buffer
-     unsigned int rx_buf_head;    // Head pointer for RX buffer
-     unsigned int rx_buf_tail;    // Tail pointer for RX buffer
+     unsigned int tx_buf_head;    // Head pointer for TX buffer in memory
+     unsigned int tx_buf_tail;    // Tail pointer for TX buffer in memory
+     unsigned int rx_buf_head;    // Head pointer for RX buffer in memory
+     unsigned int rx_buf_tail;    // Tail pointer for RX buffer in memory
      unsigned int tx_bit_count;   // Counter for TX bits
      unsigned int rx_bit_count;   // Counter for RX bits
      
@@ -97,17 +100,14 @@
      
      // Status methods
      bool tx_buffer_check();
-     bool rx_buffer_check();
      
      // Parity method
      bool calculate_parity(sc_bv<8> data);
      
-     // Accessing Memory Method
-     void load_tx_register();
-     void store_rx_register();
-     
  private:
      // Internal next-state values for TX (computed in compute_tx phase)
+     bool load_tx_phase;  // State variable for load_tx two-phase operation
+
      bool next_tx_buffer_full;
      bool next_tx_out;
      sc_bv<DATA_W> next_tx_shift_register;

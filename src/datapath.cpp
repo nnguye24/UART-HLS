@@ -39,6 +39,8 @@
  }
  
  void datapath::reset() {
+    load_tx_phase = false;
+
      // Reset transmit and receive registers
      tx_shift_register = 0;
      rx_shift_register = 0;
@@ -143,9 +145,24 @@
      
      // Handle TX operations based on control signals
      if (load_tx) {
-         // Load TX shift register from buffer
-         load_tx_register();
-     }
+        if (tx_buf_head != tx_buf_tail) {
+            if (!load_tx_phase) {
+                // First phase: Set up the memory address
+                unsigned int mem_addr = tx_buf_tail; // TX buffer starts at address 0
+                addr = mem_addr; // Set address to read from Memory
+                load_tx_phase = true; // Move to second phase next time
+            }
+                
+        }
+    }
+
+
+    if (load_tx2){
+        next_tx_shift_register = data_in;
+        tx_buf_tail = (tx_buf_tail + 1) % TX_BUFFER_SIZE;
+        load_tx_phase = false; // Reset phase for next load operation
+    }
+
      
      if (tx_start) {
          // Send start bit (always 0)
@@ -208,36 +225,67 @@
      }
      
      if (rx_stop) {
-         // Verify stop bit is 1
-         if (rx_in != 1) {
-             next_framing_error = true;
-         }
-         // Check for buffer overrun before storing
-         else if (((rx_buf_head + 1) % RX_BUFFER_SIZE) == rx_buf_tail) {
-             // Buffer full → flag overrun, don't store new byte
-             next_overrun_error = true;
-         }
-         else if (!next_framing_error && !(parity_enabled && next_parity_error)) {
-             // Only store data if no errors
-             store_rx_register();
-         }
-     }
+        // Verify stop bit is 1
+        if (rx_in != 1) {
+            next_framing_error = true;
+        }
+        // Check for buffer overrun before storing
+        else if (((rx_buf_head + 1) % RX_BUFFER_SIZE) == rx_buf_tail) {
+            // Buffer full → flag overrun, don't store new byte
+            next_overrun_error = true;
+        }
+        else if (!next_framing_error && !(parity_enabled && next_parity_error)) {
+            // Only store data if no errors
+            
+            // Directly store to Memory instead of local rx_buffer
+            // Get the address for the RX buffer in Memory
+            unsigned int mem_addr = RX_BUFFER_START + rx_buf_head;
+            
+            // Apply mask based on data_bits (if less than 8)
+            sc_bv<8> masked_data = rx_shift_register;
+            if (data_bits < 8) {
+                sc_bv<8> mask = (1 << data_bits) - 1;
+                masked_data &= mask;
+            }
+            
+            // Set up data and address for writing to Memory
+            addr = mem_addr;
+            data_out = masked_data;  // This will be written to Memory
+            
+            // Signal to memory_map that we want to write to this address
+            dp_write_enable = true;
+            dp_addr = mem_addr;
+            dp_data_in = masked_data;
+            
+            // Update head pointer
+            next_rx_buf_head = (rx_buf_head + 1) % RX_BUFFER_SIZE;
+        }
+    }
+    
+    // CPU/host is reading from RX buffer
+    if (rx_read && !rx_buffer_empty) {
+        // Get the address for the current tail in Memory
+        unsigned int mem_addr = RX_BUFFER_START + rx_buf_tail;
+        
+        // Read directly from Memory
+        addr = mem_addr;
+        next_data_out = data_in;  // data_in has the value from Memory
+        
+        // Update tail pointer
+        next_rx_buf_tail = (rx_buf_tail + 1) % RX_BUFFER_SIZE;
+    }
+    
+    // Recompute empty flag
+    next_rx_buffer_empty = (next_rx_buf_head == next_rx_buf_tail);
+    
      
-     if (error_handle) {
+
+    if (error_handle) {
          // Handle error conditions - clear error flags
          next_parity_error = false;
          next_framing_error = false;
          next_overrun_error = false;
-     }
-     
-     // CPU/host is reading one byte:
-     if (rx_read && !rx_buffer_empty) {
-         next_data_out = rx_buffer[rx_buf_tail];
-         next_rx_buf_tail = (rx_buf_tail + 1) % RX_BUFFER_SIZE;
-     }
- 
-     // Recompute empty flag
-     next_rx_buffer_empty = (next_rx_buf_head == next_rx_buf_tail);
+    }
  }
  
  // Commit methods update actual registers based on next-state values
@@ -312,34 +360,7 @@
      // Check if TX buffer is full
      return ((tx_buf_head + 1) % TX_BUFFER_SIZE) == tx_buf_tail;
  }
- 
- bool datapath::rx_buffer_check() {
-     // Check if RX buffer is empty
-     return rx_buf_head == rx_buf_tail;
- }
- 
- void datapath::load_tx_register() {
-     // Load data from TX buffer to shift register
-     if (tx_buf_head != tx_buf_tail) {
-         tx_shift_register = tx_buffer[tx_buf_tail];
-         tx_buf_tail = (tx_buf_tail + 1) % TX_BUFFER_SIZE;
-     }
- }
- 
- void datapath::store_rx_register() {
-     // Store data from shift register to RX buffer
-     // Only store the relevant bits based on data_bits configuration
-     sc_bv<8> masked_data = rx_shift_register;
-     
-     // Apply mask based on data_bits (if less than 8)
-     if (data_bits < 8) {
-         sc_bv<8> mask = (1 << data_bits) - 1;
-         masked_data &= mask;
-     }
-     
-     rx_buffer[rx_buf_head] = masked_data;
-     next_rx_buf_head = (rx_buf_head + 1) % RX_BUFFER_SIZE;
- }
+
  
  // New method to provide configuration to controller 
  void datapath::sync_controller_config() {

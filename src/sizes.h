@@ -28,15 +28,16 @@
 #define TX_IDLE 0
 #define RX_IDLE 1
 #define LOAD_TX 2
-#define TX_START_BIT 3
-#define TX_DATA_BITS 4
-#define TX_PARITY_BIT 5
-#define TX_STOP_BIT 6
-#define RX_WAIT 7
-#define RX_START_BIT 8
-#define RX_DATA_BITS 9
-#define RX_PARITY_CHECK 10
-#define RX_STOP_BIT 11
-#define ERROR_HANDLING 12
+#define LOAD_TX2 3
+#define TX_START_BIT 4
+#define TX_DATA_BITS 5
+#define TX_PARITY_BIT 6
+#define TX_STOP_BIT 7
+#define RX_WAIT 8
+#define RX_START_BIT 9
+#define RX_DATA_BITS 10
+#define RX_PARITY_CHECK 11
+#define RX_STOP_BIT 12
+#define ERROR_HANDLING 13
 
 #endif
