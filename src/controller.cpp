@@ -81,6 +81,7 @@
  }
  
  void controller::compute_tx() {
+   if(!tx_buffer_full)return;
    // Reset all next-cycle outputs to default
    load_tx_next = false;
    tx_start_next = false;
@@ -158,6 +159,7 @@
  }
  
  void controller::commit_tx() {
+   if(!tx_buffer_full)return; //No data in data out
    // Update TX state
    tx_state = tx_next_state;
    
@@ -186,6 +188,7 @@
  }
  
  void controller::compute_rx() {
+   if(rx_buffer_empty)return; //NO data receive[i.e data_in]
    // Reset all next-cycle outputs to default
    rx_start_next = false;
    rx_data_next = false;
@@ -287,6 +290,7 @@
  }
  
  void controller::commit_rx() {
+   if(rx_buffer_empty)return; 
    // Update RX state
    rx_state = rx_next_state;
    

@@ -23,8 +23,8 @@ public:
     sc_in<bool> dp_write_enable;
     
     // Status signals
-    sc_in<bool> tx_buffer_full;
-    sc_in<bool> rx_buffer_empty;
+    sc_in<bool> tx_buffer_full; //Transmit Data
+    sc_in<bool> rx_buffer_empty;//Received
     sc_in<bool> error_indicator;
     
     // Memory array - single array for all memory

@@ -12,7 +12,8 @@ public:
   bool tx_buffer_full;
   bool rx_buffer_empty;
   bool rx_in;  // Serial input line
-  
+  sc_bv<DATA_W> data_in; //To be transmitted
+  sc_bv<DATA_W> data_out;// Received data
   // Error inputs
   bool parity_error;
   bool framing_error;
