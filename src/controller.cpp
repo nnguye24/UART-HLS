@@ -36,6 +36,7 @@
    
    // Reset TX latched outputs
    load_tx_next = false;
+   load_tx2_next = false
    tx_start_next = false;
    tx_data_next = false;
    tx_parity_next = false;
@@ -49,6 +50,7 @@
    error_handle_next = false;
    
    // Reset actual outputs
+   out_load_tx2 = false;
    out_load_tx = false;
    out_tx_start = false;
    out_tx_data = false;
@@ -84,6 +86,7 @@
    if(!tx_buffer_full)return;
    // Reset all next-cycle outputs to default
    load_tx_next = false;
+   load_tx2_next = false;
    tx_start_next = false;
    tx_data_next = false;
    tx_parity_next = false;
@@ -94,18 +97,24 @@
      case TX_IDLE:
        // Transition from IDLE state
        if (!tx_buffer_full) {
-         tx_next_state = TX_LOAD;
+         tx_next_state = LOAD_TX;
          load_tx_next = true;
        } else {
          tx_next_state = TX_IDLE;
        }
        break;
        
-     case TX_LOAD:
+     case LOAD_TX:
+       // Transition from LOAD state
+       tx_next_state = LOAD_TX2;
+       load_tx2_next = true;
+       break;
+
+     case LOAD_TX2:
        // Transition from LOAD state
        tx_next_state = TX_START_BIT;
        tx_start_next = true;
-       break;
+       break;  
        
      case TX_START_BIT:
        // Transition from START_BIT state
@@ -144,7 +153,7 @@
        } else {
          // Done with all stop bits
          if (!tx_buffer_full) {
-           tx_next_state = TX_LOAD;  // More data to transmit
+           tx_next_state = LOAD_TX;  // More data to transmit
          } else {
            tx_next_state = TX_IDLE;  // Return to idle
          }
@@ -165,6 +174,7 @@
    
    // Update TX outputs
    out_load_tx = load_tx_next;
+   out_load_tx2 = load_tx2_next;
    out_tx_start = tx_start_next;
    out_tx_data = tx_data_next;
    out_tx_parity = tx_parity_next;
@@ -276,7 +286,7 @@
        }
        break;
        
-     case RX_ERROR_HANDLING:
+     case ERROR_HANDLING:
        // Transition from ERROR_HANDLING state
        error_handle_next = true;
        rx_next_state = RX_IDLE;
