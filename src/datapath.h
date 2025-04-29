@@ -20,6 +20,7 @@
      
      // Control signals from controller
      bool load_tx;
+     bool load_tx2;    // Added second phase of load_tx operation
      bool tx_start;
      bool tx_data;
      bool tx_parity;

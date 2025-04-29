@@ -26,6 +26,7 @@ public:
   
   // Output control signals
   bool out_load_tx;
+  bool out_load_tx2;          // Added second phase load signal
   bool out_tx_start;
   bool out_tx_data;
   bool out_tx_parity;
@@ -76,6 +77,7 @@ public:
 private:
   // Latched TX outputs from compute_tx()
   bool load_tx_next;
+  bool load_tx2_next;      // Added second phase load signal
   bool tx_start_next;
   bool tx_data_next;
   bool tx_parity_next;

@@ -46,6 +46,11 @@ void top::compute() {
   memory_map_inst.error_indicator = datapath_inst.parity_error || 
                                    datapath_inst.framing_error || 
                                    datapath_inst.overrun_error;
+                                   
+  // Connect datapath signals to memory map
+  memory_map_inst.dp_data_in = datapath_inst.dp_data_in;
+  memory_map_inst.dp_addr = datapath_inst.dp_addr;
+  memory_map_inst.dp_write_enable = datapath_inst.dp_write_enable;
   
   // Compute memory map
   memory_map_inst.compute();
@@ -75,6 +80,7 @@ void top::compute() {
   
   // Control signals from controller
   datapath_inst.load_tx = controller_inst.out_load_tx;
+  datapath_inst.load_tx2 = controller_inst.out_load_tx2; // Added missing load_tx2 signal
   datapath_inst.tx_start = controller_inst.out_tx_start;
   datapath_inst.tx_data = controller_inst.out_tx_data;
   datapath_inst.tx_parity = controller_inst.out_tx_parity;
@@ -90,15 +96,9 @@ void top::compute() {
   datapath_inst.data_in = memory_map_inst.data_out;
   // RX input signal
   datapath_inst.rx_in = in_rx_in;
-  // Update the configuration signals from the memory map
-  datapath_inst.update_configuration();
+  
   // Compute datapath
   datapath_inst.compute();
-  
-  // Connect the datapath output to memory map for storing in RAM
-  memory_map_inst.dp_data_in = datapath_inst.data_out;
-  memory_map_inst.dp_addr = datapath_inst.addr;
-  memory_map_inst.dp_write_enable = datapath_inst.rx_read && !datapath_inst.rx_buffer_empty;
 }
 
 void top::commit() {
@@ -111,11 +111,12 @@ void top::commit() {
   datapath_inst.sync_controller_config();
   
   // === OUTPUT PHASE ===
-  // Update output signals - all outputs should come from the memory map
-  // which serves as the interface to the external system
+  // Update output signals
   data_out.write(memory_map_inst.data_out);
-  tx_out.write(datapath_inst.tx_out);  // This is an exception since it's a direct serial output
-  tx_buffer_full.write(memory_map_inst.tx_buffer_full);
-  rx_buffer_empty.write(memory_map_inst.rx_buffer_empty);
-  error_indicator.write(memory_map_inst.error_indicator);
+  tx_out.write(datapath_inst.tx_out);
+  tx_buffer_full.write(datapath_inst.tx_buffer_full);
+  rx_buffer_empty.write(datapath_inst.rx_buffer_empty);
+  error_indicator.write(datapath_inst.parity_error || 
+                        datapath_inst.framing_error || 
+                        datapath_inst.overrun_error);
 }
