@@ -85,9 +85,6 @@
      if (dp_write_enable) {
          if (dp_addr < RAM_SIZE) {
              Memory[dp_addr] = dp_data_in;
-             
-             // Update internal state based on datapath writes
-             handle_register_change(dp_addr, dp_data_in);
          }
      }
      
@@ -108,40 +105,12 @@
              // Write operation
              if (addr < RAM_SIZE) {
                  Memory[addr] = data_in;
-                 
-                 // Update internal state based on register writes
-                 handle_register_change(addr, data_in);
              }
          }
      }
      
      // Always update datapath output with current memory value
      dp_data_out = Memory[dp_addr];
- }
- 
- void memory_map::handle_register_change(sc_uint<ADDR_W> reg_addr, sc_uint<DATA_W> value) {
-     // Handle specific register updates that need immediate action
-     switch (reg_addr) {
-         case BAUD_RATE_LOW:
-         case BAUD_RATE_HIGH:
-             // Update baud rate settings
-             // (Would trigger baud rate recalculation in a real implementation)
-             break;
-             
-         case LINE_CONTROL_REG:
-             // Update line control settings
-             // (Affects parity, stop bits, etc.)
-             break;
-             
-         case FIFO_CONTROL_REG:
-             // Update FIFO settings
-             // (Affects buffer behavior)
-             break;
-             
-         default:
-             // No special handling needed for other registers
-             break;
-     }
  }
  
  void memory_map::status_update() {
@@ -187,57 +156,7 @@
  }
  
  // Helper methods for accessing specific memory regions
- sc_uint<DATA_W> memory_map::get_tx_buffer(unsigned int index) {
-     if (index < TX_BUFFER_SIZE) {
-         return Memory[TX_BUFFER_START + index];
-     }
-     return 0;
- }
- 
- void memory_map::set_tx_buffer(unsigned int index, sc_uint<DATA_W> value) {
-     if (index < TX_BUFFER_SIZE) {
-         Memory[TX_BUFFER_START + index] = value;
-     }
- }
- 
- sc_uint<DATA_W> memory_map::get_rx_buffer(unsigned int index) {
-     if (index < RX_BUFFER_SIZE) {
-         return Memory[RX_BUFFER_START + index];
-     }
-     return 0;
- }
- 
- void memory_map::set_rx_buffer(unsigned int index, sc_uint<DATA_W> value) {
-     if (index < RX_BUFFER_SIZE) {
-         Memory[RX_BUFFER_START + index] = value;
-     }
- }
- 
- sc_uint<DATA_W> memory_map::get_baud_rate_divisor() {
-     // Combine high and low bytes of baud rate divisor
-     return (Memory[BAUD_RATE_HIGH] << 8) | Memory[BAUD_RATE_LOW];
- }
- 
- bool memory_map::get_parity_enabled() {
-     return (Memory[LINE_CONTROL_REG] & LCR_PARITY_ENABLE) != 0;
- }
- 
- bool memory_map::get_parity_even() {
-     return (Memory[LINE_CONTROL_REG] & LCR_PARITY_EVEN) != 0;
- }
- 
- unsigned int memory_map::get_data_bits() {
-     // Extract data bits configuration
-     unsigned int data_bits_cfg = Memory[LINE_CONTROL_REG] & LCR_DATA_BITS_MASK;
-     
-     // Convert to actual number of data bits (5-8)
-     return data_bits_cfg + 5;
- }
- 
- unsigned int memory_map::get_stop_bits() {
-     // Extract stop bits configuration (0=1 bit, 1=2 bits)
-     return ((Memory[LINE_CONTROL_REG] & LCR_STOP_BITS) != 0) ? 2 : 1;
- }
+
  
  void memory_map::compute() {
      // Memory access covers the compute phase
