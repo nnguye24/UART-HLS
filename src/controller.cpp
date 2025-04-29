@@ -152,7 +152,7 @@
        } else {
          // Done with all stop bits
          if (!tx_buffer_full) {
-           tx_next_state = TX_LOAD;  // More data to transmit
+           tx_next_state = LOAD_TX;  // More data to transmit
          } else {
            tx_next_state = TX_IDLE;  // Return to idle
          }
