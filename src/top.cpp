@@ -3,7 +3,7 @@
 void top::process() {
   // Initial reset
   while (true) {
-    if (!reset.read()) {
+    if (!rst.read()) {
       HLS_DEFINE_PROTOCOL("reset");
       
       datapath_inst.reset();
@@ -23,38 +23,99 @@ void top::process() {
 
 void top::compute() {
   // === INPUT PHASE ===
-  bool in_tx_start = tx_start.read();
-  sc_bv<DATA_W> in_tx_data = tx_data.read();
+  // Read inputs from signals
+  bool in_rst = rst.read();
+  bool in_chip_select = chip_select.read();
+  bool in_read_write = read_write.read();
+  bool in_write_enable = write_enable.read();
   bool in_rx_in = rx_in.read();
-
+  sc_uint<DATA_W> in_data_in = data_in.read();
+  sc_uint<ADDR_W> in_addr = addr.read();
+  
+  // === MEMORY MAP INPUTS ===
+  memory_map_inst.rst = in_rst;
+  memory_map_inst.data_in = in_data_in;
+  memory_map_inst.addr = in_addr;
+  memory_map_inst.chip_select = in_chip_select;
+  memory_map_inst.read_write = in_read_write;
+  memory_map_inst.write_enable = in_write_enable;
+  
+  // Connect status signals from datapath to memory map
+  memory_map_inst.tx_buffer_full = datapath_inst.tx_buffer_full;
+  memory_map_inst.rx_buffer_empty = datapath_inst.rx_buffer_empty;
+  memory_map_inst.error_indicator = datapath_inst.parity_error || 
+                                   datapath_inst.framing_error || 
+                                   datapath_inst.overrun_error;
+  
+  // Compute memory map
+  memory_map_inst.compute();
+  
   // === CONTROLLER INPUTS ===
-  controller_inst.tx_start = in_tx_start;
-  controller_inst.tx_done = tx_inst.out_tx_done;
-  controller_inst.rx_done = rx_inst.out_rx_done;
-
-  // === COMPUTE PHASE ===
+  controller_inst.clk = clk.read();
+  controller_inst.rst = in_rst;
+  controller_inst.tx_buffer_full = datapath_inst.tx_buffer_full;
+  controller_inst.rx_buffer_empty = datapath_inst.rx_buffer_empty;
+  controller_inst.rx_in = in_rx_in;
+  controller_inst.parity_error = datapath_inst.parity_error;
+  controller_inst.framing_error = datapath_inst.framing_error;
+  controller_inst.overrun_error = datapath_inst.overrun_error;
+  
+  // Get configuration from datapath
+  controller_inst.parity_enabled = datapath_inst.ctrl_parity_enabled;
+  controller_inst.parity_even = datapath_inst.ctrl_parity_even;
+  controller_inst.data_bits = datapath_inst.ctrl_data_bits;
+  controller_inst.stop_bits = datapath_inst.ctrl_stop_bits;
+  
+  // Compute controller FSM
   controller_inst.compute();
-
-  // === TX INPUTS ===
-  tx_inst.tx_start = in_tx_start;
-  tx_inst.tx_data = in_tx_data;
-  tx_inst.baud_tick = controller_inst.out_baud_tick;
-  tx_inst.compute();
-
-  // === RX INPUTS ===
-  rx_inst.rx_in = in_rx_in;
-  rx_inst.baud_tick = controller_inst.out_baud_tick;
-  rx_inst.compute();
+  
+  // === DATAPATH INPUTS ===
+  datapath_inst.clk = clk.read();
+  datapath_inst.rst = in_rst;
+  
+  // Control signals from controller
+  datapath_inst.load_tx = controller_inst.out_load_tx;
+  datapath_inst.tx_start = controller_inst.out_tx_start;
+  datapath_inst.tx_data = controller_inst.out_tx_data;
+  datapath_inst.tx_parity = controller_inst.out_tx_parity;
+  datapath_inst.tx_stop = controller_inst.out_tx_stop;
+  datapath_inst.rx_start = controller_inst.out_rx_start;
+  datapath_inst.rx_data = controller_inst.out_rx_data;
+  datapath_inst.rx_parity = controller_inst.out_rx_parity;
+  datapath_inst.rx_stop = controller_inst.out_rx_stop;
+  datapath_inst.error_handle = controller_inst.out_error_handle;
+  datapath_inst.rx_read = controller_inst.out_rx_read;
+  
+  // Data from memory map
+  datapath_inst.data_in = memory_map_inst.data_out;
+  // RX input signal
+  datapath_inst.rx_in = in_rx_in;
+  // Update the configuration signals from the memory map
+  datapath_inst.update_configuration();
+  // Compute datapath
+  datapath_inst.compute();
+  
+  // Connect the datapath output to memory map for storing in RAM
+  memory_map_inst.dp_data_in = datapath_inst.data_out;
+  memory_map_inst.dp_addr = datapath_inst.addr;
+  memory_map_inst.dp_write_enable = datapath_inst.rx_read && !datapath_inst.rx_buffer_empty;
 }
 
-void uart_top::commit() {
-  tx_inst.commit();
-  rx_inst.commit();
+void top::commit() {
+  // Commit state updates for all modules
+  datapath_inst.commit();
   controller_inst.commit();
-
+  memory_map_inst.commit();
+  
+  // Synchronize configuration between datapath and controller
+  datapath_inst.sync_controller_config();
+  
   // === OUTPUT PHASE ===
-  tx_out.write(tx_inst.out_tx_out);
-  tx_busy.write(tx_inst.out_tx_busy);
-  rx_data.write(rx_inst.out_rx_data);
-  rx_ready.write(rx_inst.out_rx_ready);
+  // Update output signals - all outputs should come from the memory map
+  // which serves as the interface to the external system
+  data_out.write(memory_map_inst.data_out);
+  tx_out.write(datapath_inst.tx_out);  // This is an exception since it's a direct serial output
+  tx_buffer_full.write(memory_map_inst.tx_buffer_full);
+  rx_buffer_empty.write(memory_map_inst.rx_buffer_empty);
+  error_indicator.write(memory_map_inst.error_indicator);
 }
