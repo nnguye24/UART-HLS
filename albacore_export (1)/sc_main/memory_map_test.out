@@ -1,0 +1,150 @@
+TOOL:	xrun	24.03-s005: Started on Apr 22, 2025 at 14:01:11 EDT
+TOOL:	xrun(64)	24.03-s005: Started on Apr 22, 2025 at 14:01:11 EDT
+xrun(64): 24.03-s005: (c) Copyright 1995-2024 Cadence Design Systems, Inc.
+Loading snapshot worklib.sc_main:sc_module .................... Done
+Setting start to 0 and mem_mem_we to 0 at 0 s
+-------------------------
+Start up with 1 cycles
+Instruction cycle start time - 0 s
+xcelium> database -open waves -into waves.shm -default -event
+Created default SHM database waves
+xcelium> probe -create -shm sc_main -all -depth all
+Created probe 1
+xcelium> run
+-------------------------
+Running a reset test
+The reset block will take 2 cycles
+-------------------------
+Run Reset Test
+Instruction cycle start time - 10 ns
+out_dout 0000000000000000 10 ns
+Memory Map Reset Passed
+-------------------------
+Writing to the Memory RAM for 8 cycles
+-------------------------
+Write 0x7220 at Memory[0]
+Instruction cycle start time - 20 ns
+out_dout 0000000000000000 20 ns
+Expected value of Memory[0] = 0111001000100000
+Memory Write Test Passed
+Write 0x8002 at Memory[1]
+Instruction cycle start time - 30 ns
+out_dout 0111001000100000 30 ns
+Expected value of Memory[1] = 1000000000000010
+Memory Write Test Passed
+Write 0x8112 at Memory[2]
+Instruction cycle start time - 40 ns
+out_dout 0111001000100000 40 ns
+Expected value of Memory[2] = 1000000100010010
+Memory Write Test Passed
+Write 0x0001 at Memory[3]
+Instruction cycle start time - 50 ns
+out_dout 0111001000100000 50 ns
+Expected value of Memory[3] = 0000000000000001
+Memory Write Test Passed
+Write 0x9202 at Memory[4]
+Instruction cycle start time - 60 ns
+out_dout 0111001000100000 60 ns
+Expected value of Memory[4] = 1001001000000010
+Memory Write Test Passed
+Write 0xF000 at Memory[5]
+Instruction cycle start time - 70 ns
+out_dout 0111001000100000 70 ns
+Expected value of Memory[5] = 1111000000000000
+Memory Write Test Passed
+Write 0x0003 at Memory[32]
+Instruction cycle start time - 80 ns
+out_dout 0111001000100000 80 ns
+Expected value of Memory[32] = 0000000000000011
+Memory Write Test Passed
+Write 0x0004 at Memory[33]
+Instruction cycle start time - 90 ns
+out_dout 0111001000100000 90 ns
+Expected value of Memory[33] = 0000000000000100
+Memory Write Test Passed
+-------------------------
+Clearing reset and starting datapath tests
+This test includes the six instructions from PLPD pg. 296
+A compiling for the following C code:
+int main(){
+    A[0] = 2;
+    A[1] = 3;
+    A[2] = A[1] + A[0];
+    return 0;
+}
+-------------------------
+-------------------------
+Testing Start Signal
+Instruction cycle start time - 100 ns
+out_dout 0111001000100000 100 ns
+Start Test Passed
+-------------------------
+Testing 0x7220 - ldi $2 32
+Instruction cycle start time - 110 ns
+out_dout 0111001000100000 110 ns
+out_dout 0111001000100000 120 ns
+out_dout 0111001000100000 130 ns
+out_dout 0111001000100000 140 ns
+out_dout 0111001000100000 150 ns
+-------------------------
+Testing 0x8002 - ld $r0 $r2 0
+Instruction cycle start time - 160 ns
+out_dout 0111001000100000 160 ns
+out_dout 0111001000100000 170 ns
+out_dout 0111001000100000 180 ns
+out_dout 0111001000100000 190 ns
+out_dout 0111001000100000 200 ns
+out_dout 0111001000100000 210 ns
+out_dout 0111001000100000 220 ns
+-------------------------
+Testing 0x8112 - ld $r1 $r3 1
+Instruction cycle start time - 230 ns
+out_dout 0111001000100000 230 ns
+out_dout 0111001000100000 240 ns
+out_dout 0111001000100000 250 ns
+out_dout 0111001000100000 260 ns
+out_dout 0111001000100000 270 ns
+out_dout 0111001000100000 280 ns
+out_dout 0111001000100000 290 ns
+-------------------------
+Testing 0x0001 - add $r0 $r0 $r1
+Instruction cycle start time - 300 ns
+out_dout 0111001000100000 300 ns
+out_dout 0111001000100000 310 ns
+out_dout 0111001000100000 320 ns
+out_dout 0111001000100000 330 ns
+out_dout 0111001000100000 340 ns
+-------------------------
+// Four cycles before write
+Testing 0x9202 - st $r0 2($r2)
+Instruction cycle start time - 350 ns
+out_dout 0000000000000111 350 ns
+out_dout 0000000000000111 360 ns
+out_dout 0000000000000111 370 ns
+out_dout 0000000000000111 380 ns
+out_dout 0000000000000111 390 ns
+out_dout 0000000000000111 400 ns
+Expected value of Memory[34] = 0000000000000111
+Memory Write Test Passed
+-------------------------
+Testing 0xF000 - quit
+Instruction cycle start time - 410 ns
+out_dout 0000000000000111 410 ns
+out_dout 0000000000000111 420 ns
+-------------------------
+Run Reset Test
+Instruction cycle start time - 430 ns
+Memory Map Reset Passed
+-------------------------
+-------------------------
+Memory Map Test completed successfully
+-------------------------
+-------------------------
+SystemC: simulation stopped by user.
+
+
+SC simulation stopped by user.
+
+SystemC : SystemC stopped at time 440
+xcelium> exit
+TOOL:	xrun(64)	24.03-s005: Exiting on Apr 22, 2025 at 14:01:12 EDT  (total: 00:00:01)
