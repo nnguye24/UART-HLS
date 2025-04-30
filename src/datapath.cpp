@@ -6,7 +6,7 @@
  * Datapath implementation for UART controller
  **************************************************************/
 
- #include "datapath.h"
+#include "datapath.h"
  #include <iostream>
  
  using namespace std;
@@ -277,7 +277,7 @@
     
     // Recompute empty flag
     next_rx_buffer_empty = (next_rx_buf_head == next_rx_buf_tail);
-    
+
      
 
     if (error_handle) {
