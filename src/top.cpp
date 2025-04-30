@@ -65,13 +65,13 @@
  
  void top::read_inputs() {
    // Read inputs from external pins to internal variables
-   in_rst = rst.read();
-   in_data_in = data_in.read();
-   in_addr = addr.read();
-   in_chip_select = chip_select.read();
-   in_read_write = read_write.read();
-   in_write_enable = write_enable.read();
-   in_rx_in = rx_in.read();
+   in_rst.write(rst.read());
+   in_data_in.write(data_in.read());
+   in_addr.write(addr.read());
+   in_chip_select.write(chip_select.read());
+   in_read_write.write(read_write.read());
+   in_write_enable.write(write_enable.read());
+   in_rx_in.write(rx_in.read());
    
    // Set internal control signals
    start_signal.write(false);  // No external start in this implementation
