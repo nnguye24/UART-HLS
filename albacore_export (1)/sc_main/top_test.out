@@ -1,0 +1,199 @@
+TOOL:	xrun	24.03-s005: Started on Apr 29, 2025 at 08:34:39 EDT
+TOOL:	xrun(64)	24.03-s005: Started on Apr 29, 2025 at 08:34:39 EDT
+xrun(64): 24.03-s005: (c) Copyright 1995-2024 Cadence Design Systems, Inc.
+Loading snapshot worklib.sc_main:sc_module .................... Done
+-------------------------
+Start up with 2 cycles (reset high)
+Instruction cycle start time - 0 s
+xcelium> database -open waves -into waves.shm -default -event
+Created default SHM database waves
+xcelium> probe -create -shm sc_main -all -depth all
+Created probe 1
+xcelium> run
+out_dout 0000000000000000 0 s
+-------------------------
+Reset active
+Instruction cycle start time - 5 ns
+-------------------------
+Write 0x7220 to RAM[0]
+Instruction cycle start time - 10 ns
+out_dout 0000000000000000 10 ns
+Expected value of Memory[0] = 0111001000100000
+Memory Write Test Passed
+-------------------------
+Write 0x8002 to RAM[1]
+Instruction cycle start time - 20 ns
+out_dout 0111001000100000 20 ns
+Expected value of Memory[1] = 1000000000000010
+Memory Write Test Passed
+-------------------------
+Write 0x8112 to RAM[2]
+Instruction cycle start time - 30 ns
+out_dout 0111001000100000 30 ns
+Expected value of Memory[2] = 1000000100010010
+Memory Write Test Passed
+-------------------------
+Write 0x0001 to RAM[3]
+Instruction cycle start time - 40 ns
+out_dout 0111001000100000 40 ns
+Expected value of Memory[3] = 0000000000000001
+Memory Write Test Passed
+-------------------------
+Write 0x9202 to RAM[4]
+Instruction cycle start time - 50 ns
+out_dout 0111001000100000 50 ns
+Expected value of Memory[4] = 1001001000000010
+Memory Write Test Passed
+-------------------------
+Write 0xF000 to RAM[5]
+Instruction cycle start time - 60 ns
+out_dout 0111001000100000 60 ns
+Expected value of Memory[5] = 1111000000000000
+Memory Write Test Passed
+-------------------------
+Write 0x0003 to RAM[32]
+Instruction cycle start time - 70 ns
+out_dout 0111001000100000 70 ns
+Expected value of Memory[32] = 0000000000000011
+Memory Write Test Passed
+-------------------------
+Write 0x0004 to RAM[33]
+Instruction cycle start time - 80 ns
+out_dout 0111001000100000 80 ns
+Expected value of Memory[33] = 0000000000000100
+Memory Write Test Passed
+-------------------------
+Start program
+Instruction cycle start time - 90 ns
+out_dout 0111001000100000 90 ns
+-------------------------
+Start program clear
+Instruction cycle start time - 100 ns
+out_dout 0111001000100000 100 ns
+in_data_in 0111001000100000 105 ns
+0000 105 ns
+-------------------------
+0x7220 - ldi $2, 32
+Instruction cycle start time - 110 ns
+out_dout 0111001000100000 110 ns
+in_data_in 0111001000100000 115 ns
+0000 115 ns
+out_dout 0111001000100000 120 ns
+in_data_in 0111001000100000 125 ns
+0000 125 ns
+out_dout 0111001000100000 130 ns
+in_data_in 0111001000100000 135 ns
+0111 135 ns
+out_dout 0111001000100000 140 ns
+in_data_in 0111001000100000 145 ns
+1010 145 ns
+out_dout 1000000000000010 150 ns
+in_data_in 1000000000000010 155 ns
+0000 155 ns
+Testing datapath_inst.register_file[2] ...LDI passed: Got 0000000000100000
+-------------------------
+0x8002 - ld $0, $2, 0
+Instruction cycle start time - 160 ns
+out_dout 1000000000000010 160 ns
+in_data_in 1000000000000010 165 ns
+0000 165 ns
+out_dout 1000000000000010 170 ns
+in_data_in 1000000000000010 175 ns
+0000 175 ns
+out_dout 1000000000000010 180 ns
+in_data_in 1000000000000010 185 ns
+1000 185 ns
+out_dout 1000000000000010 190 ns
+in_data_in 1000000000000010 195 ns
+0000 195 ns
+out_dout 0000000000000011 200 ns
+in_data_in 0000000000000011 205 ns
+0000 205 ns
+in_enable_mdr 0000000000000011 0000000000000011
+out_dout 1000000000000010 210 ns
+in_data_in 1000000000000010 215 ns
+1010 215 ns
+out_dout 1000000100010010 220 ns
+in_data_in 1000000100010010 225 ns
+0000 225 ns
+Testing datapath_inst.register_file[0] ...LDI passed: Got 0000000000000011
+-------------------------
+0x8112 - ld $1, $2, 1
+Instruction cycle start time - 230 ns
+out_dout 1000000100010010 230 ns
+in_data_in 1000000100010010 235 ns
+0000 235 ns
+out_dout 1000000100010010 240 ns
+in_data_in 1000000100010010 245 ns
+0000 245 ns
+out_dout 1000000100010010 250 ns
+in_data_in 1000000100010010 255 ns
+1000 255 ns
+out_dout 1000000100010010 260 ns
+in_data_in 1000000100010010 265 ns
+0000 265 ns
+out_dout 0000000000000100 270 ns
+in_data_in 0000000000000100 275 ns
+0000 275 ns
+in_enable_mdr 0000000000000100 0000000000000100
+out_dout 1000000100010010 280 ns
+in_data_in 1000000100010010 285 ns
+1010 285 ns
+out_dout 0000000000000001 290 ns
+in_data_in 0000000000000001 295 ns
+0000 295 ns
+Testing datapath_inst.register_file[1] ...LDI passed: Got 0000000000000100
+-------------------------
+0x0001 - add $0, $0, $1
+Instruction cycle start time - 300 ns
+out_dout 0000000000000001 300 ns
+in_data_in 0000000000000001 305 ns
+0000 305 ns
+out_dout 0000000000000001 310 ns
+in_data_in 0000000000000001 315 ns
+0000 315 ns
+out_dout 0000000000000001 320 ns
+in_data_in 0000000000000001 325 ns
+0000 325 ns
+out_dout 0000000000000001 330 ns
+in_data_in 0000000000000001 335 ns
+1010 335 ns
+out_dout 1001001000000010 340 ns
+in_data_in 1001001000000010 345 ns
+0000 345 ns
+Testing datapath_inst.register_file[0] ...LDI passed: Got 0000000000000111
+-------------------------
+0x9202 - st $0, 2($2)
+Instruction cycle start time - 350 ns
+out_dout 1001001000000010 350 ns
+in_data_in 1001001000000010 355 ns
+0000 355 ns
+out_dout 1001001000000010 360 ns
+in_data_in 1001001000000010 365 ns
+0000 365 ns
+out_dout 1001001000000010 370 ns
+in_data_in 1001001000000010 375 ns
+1001 375 ns
+out_dout 1001001000000010 380 ns
+in_data_in 1001001000000010 385 ns
+1010 385 ns
+out_dout 0000000000000111 390 ns
+in_data_in 0000000000000111 395 ns
+0000 395 ns
+out_dout 1111000000000000 400 ns
+in_data_in 1111000000000000 405 ns
+0000 405 ns
+Expected value of Memory[34] = 0000000000000111
+Memory Write Test Passed
+-------------------------
+0xF000 - quit
+Instruction cycle start time - 410 ns
+out_dout 1111000000000000 410 ns
+in_data_in 1111000000000000 415 ns
+0000 415 ns
+-------------------------
+Final reset
+Instruction cycle start time - 420 ns
+-------------------------
+Top-Level Test Completed Successfully!
+TOOL:	xrun(64)	24.03-s005: Exiting on Apr 29, 2025 at 08:34:41 EDT  (total: 00:00:02)

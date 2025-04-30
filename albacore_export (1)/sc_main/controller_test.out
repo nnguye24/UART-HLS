@@ -1,0 +1,315 @@
+TOOL:	xrun	24.03-s005: Started on Apr 22, 2025 at 17:18:11 EDT
+TOOL:	xrun(64)	24.03-s005: Started on Apr 22, 2025 at 17:18:11 EDT
+xrun(64): 24.03-s005: (c) Copyright 1995-2024 Cadence Design Systems, Inc.
+Loading snapshot worklib.sc_main:sc_module .................... Done
+----------------------------------------------
+Setting start to 0 and mem_we to 0 at 0 s
+Start up with 1 cycle
+Instruction cycle start time - 0 s
+xcelium> database -open waves -into waves.shm -default -event
+Created default SHM database waves
+xcelium> probe -create -shm sc_main -all -depth all
+Created probe 1
+xcelium> run
+----------------------------------------------
+Reset test
+Instruction cycle start time - 10 ns
+Reset test PASSED
+----------------------------------------------
+----------------------------------------------
+Eight cycles of memory writes (addresses 0-5 and 32-33)
+----------------------------------------------
+0x7220 written to Memory[0] - nothing in controller
+Instruction cycle start time - 20 ns
+0x8002 written to Memory[1] - nothing in controller
+Instruction cycle start time - 30 ns
+0x8112 written to Memory[2] - nothing in controller
+Instruction cycle start time - 40 ns
+0x0001 written to Memory[3] - nothing in controller
+Instruction cycle start time - 50 ns
+0x9202 written to Memory[4] - nothing in controller
+Instruction cycle start time - 60 ns
+0xF000 written to Memory[5] - nothing in controller
+Instruction cycle start time - 70 ns
+0x0003 written to Memory[32] - nothing in controller
+Instruction cycle start time - 80 ns
+0x0004 written to Memory[33] - nothing in controller
+Instruction cycle start time - 90 ns
+----------------------------------------------
+Clearing reset and starting datapath tests
+This test includes the six instructions from PLPD pg. 296
+A compiling for the following C code:
+int main(){
+    A[0] = 2;
+    A[1] = 3;
+    A[2] = A[1] + A[0];
+    return 0;
+}
+----------------------------------------------
+Testing Start Signal
+Instruction cycle start time - 100 ns
+Expected state Register value of 00000
+Expected next_state Register value of 00000
+Start Test Passed
+----------------------------------------------
+Testing 0x7220 - ldi $2 32
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 110 ns
+Expected s_addr value of 0
+Expected state Register value of 00000
+Expected next_state Register value of 00001
+Start Test Passed
+----------------------------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 120 ns
+Expected state Register value of 00001
+Expected next_state Register value of 00010
+Start Test Passed
+IFETCH2 test passed
+----------------------------------------------
+Instruction Decode Cycle
+Instruction cycle start time - 130 ns
+Expected result of opcode_reg - 0111
+Controller DECODE outputs passed
+Expected state Register value of 00010
+Expected next_state Register value of 01010
+Start Test Passed
+Instruction DECODE cycle passed.
+----------------------------------------------
+Execution Cycle
+Instruction cycle start time - 140 ns
+Controller EX_LDI outputs passed
+Expected state Register value of 01010
+Expected next_state Register value of 10111
+Start Test Passed
+EX_LDI cycle passed.
+----------------------------------------------
+Load/Store Cycle - WB_ALU
+Instruction cycle start time - 150 ns
+WB_ALU signals Passed
+Expected state Register value of 10111
+Expected next_state Register value of 00000
+Start Test Passed
+WB_ALU Passed
+... Write Back Test Passed!
+----------------------------------------------
+Testing 0x8002 - ld $r0 $r2 0
+----------------------------------------------
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 160 ns
+Expected s_addr value of 0
+Expected state Register value of 00000
+Expected next_state Register value of 00001
+Start Test Passed
+IFETCH Passed
+----------------------------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 170 ns
+Expected state Register value of 00001
+Expected next_state Register value of 00010
+Start Test Passed
+IFETCH2 test passed
+----------------------------------------------
+Instruction Decode Cycle
+Instruction cycle start time - 180 ns
+Expected result of opcode_reg - 1000
+Controller DECODE outputs passed
+Expected state Register value of 00010
+Expected next_state Register value of 01011
+Start Test Passed
+Instruction DECODE cycle passed.
+----------------------------------------------
+Execution Cycle
+Instruction cycle start time - 190 ns
+Controller EX_LD outputs passed
+Expected state Register value of 01011
+Expected next_state Register value of 10011
+Start Test Passed
+EX_LD cycle passed.
+----------------------------------------------
+Load/Store Cycle - MEM_LD
+Instruction cycle start time - 200 ns
+Controller MEM_LD outputs passed
+Expected state Register value of 10011
+Expected next_state Register value of 10100
+Start Test Passed
+MEM_LD cycle passed.
+----------------------------------------------
+Load/Store Cycle - MEM_LD2
+Instruction cycle start time - 210 ns
+Controller MEM_LD2 outputs passed
+Expected state Register value of 10100
+Expected next_state Register value of 11000
+Start Test Passed
+MEM_LD2 cycle passed.
+----------------------------------------------
+Load/Store Cycle - WB_LD
+Instruction cycle start time - 220 ns
+WB_LD signals Passed
+Expected state Register value of 11000
+Expected next_state Register value of 00000
+Start Test Passed
+WB_LD cycle passed.
+... Write Back Test Passed!
+----------------------------------------------
+Testing 0x8112 - ld $r1 $r2 1
+----------------------------------------------
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 230 ns
+Expected s_addr value of 0
+Expected state Register value of 00000
+Expected next_state Register value of 00001
+Start Test Passed
+IFETCH Passed
+----------------------------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 240 ns
+Expected state Register value of 00001
+Expected next_state Register value of 00010
+Start Test Passed
+IFETCH2 test passed
+----------------------------------------------
+Instruction Decode Cycle
+Instruction cycle start time - 250 ns
+Expected result of opcode_reg - 1000
+Controller DECODE outputs passed
+Expected state Register value of 00010
+Expected next_state Register value of 01011
+Start Test Passed
+Instruction DECODE cycle passed.
+----------------------------------------------
+Execution Cycle
+Instruction cycle start time - 260 ns
+Controller EX_LD outputs passed
+Expected state Register value of 01011
+Expected next_state Register value of 10011
+Start Test Passed
+EX_LD cycle passed.
+----------------------------------------------
+Load/Store Cycle - MEM_LD
+Instruction cycle start time - 270 ns
+Controller MEM_LD outputs passed
+Expected state Register value of 10011
+Expected next_state Register value of 10100
+Start Test Passed
+MEM_LD cycle passed.
+----------------------------------------------
+Load/Store Cycle - MEM_LD2
+Instruction cycle start time - 280 ns
+Controller MEM_LD2 outputs passed
+Expected state Register value of 10100
+Expected next_state Register value of 11000
+Start Test Passed
+MEM_LD2 cycle passed.
+----------------------------------------------
+Load/Store Cycle - WB_LD
+Instruction cycle start time - 290 ns
+WB_LD signals Passed
+Expected state Register value of 11000
+Expected next_state Register value of 00000
+Start Test Passed
+WB_LD cycle passed.
+... Write Back Test Passed!
+----------------------------------------------
+Testing 0x0001 - add $r0 $r0 $r1
+----------------------------------------------
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 300 ns
+Expected s_addr value of 0
+Expected state Register value of 00000
+Expected next_state Register value of 00001
+Start Test Passed
+IFETCH Passed
+----------------------------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 310 ns
+Expected state Register value of 00001
+Expected next_state Register value of 00010
+Start Test Passed
+IFETCH2 test passed
+----------------------------------------------
+DECODE
+Instruction cycle start time - 320 ns
+Expected result of opcode_reg - 0000
+Controller DECODE outputs passed
+Expected state Register value of 00010
+Expected next_state Register value of 00011
+Start Test Passed
+DECODE test passed
+-------------------------
+Execution Cycle
+Instruction cycle start time - 330 ns
+Controller EX_ADD outputs failed
+Expected state Register value of 00011
+Expected next_state Register value of 10111
+Start Test Passed
+EX_ADD cycle passed.
+-------------------------
+Load/Store Cycle - WB_ALU
+Instruction cycle start time - 340 ns
+WB_ALU Passed
+Expected state Register value of 10111
+Expected next_state Register value of 00000
+Start Test Passed
+... Write Back Test Passed!
+-------------------------
+-------------------------
+Testing 0x9202 - st $0 2($2)
+-------------------------
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 350 ns
+Expected s_addr value of 0
+-------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 360 ns
+Expected state Register value of 00001
+Expected next_state Register value of 00010
+Start Test Passed
+IFETCH2 test passed
+-------------------------
+Instruction Decode Cycle
+Instruction Decode Cycle
+Instruction cycle start time - 370 ns
+Expected result of opcode - 1001
+Controller DECODE outputs passed
+Expected state Register value of 00010
+Expected next_state Register value of 01100
+Start Test Passed
+Instruction DECODE cycle passed.
+-------------------------
+Execution Cycle
+Instruction cycle start time - 380 ns
+Controller EX_ADD outputs passed
+Expected state Register value of 01100
+Expected next_state Register value of 10101
+Start Test Passed
+EX_ST cycle passed.
+-------------------------
+Load/Store Cycle - MEM_ST
+Load/Store Cycle - MEM_ST
+Instruction cycle start time - 390 ns
+Controller MEM_ST outputs passed
+Expected state Register value of 10101
+Expected next_state Register value of 00000
+Start Test Passed
+MEM_ST cycle passed.
+-------------------------
+-------------------------
+Testing 0xF000 - quit
+-------------------------
+Instruction Fetch Cycle IFETCH
+Instruction cycle start time - 400 ns
+Expected s_addr value of 0
+-------------------------
+Instruction Fetch Cycle IFETCH2
+Instruction Fetch Cycle IFETCH2
+Instruction cycle start time - 410 ns
+Unexpected result of opcode - 0000
+SystemC: simulation stopped by user.
+
+
+SC simulation stopped by user.
+
+SystemC : SystemC stopped at time 420
+xcelium> exit
+TOOL:	xrun(64)	24.03-s005: Exiting on Apr 22, 2025 at 17:18:12 EDT  (total: 00:00:01)

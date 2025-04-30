@@ -110,8 +110,7 @@ void top::commit() {
   // Synchronize configuration between datapath and controller
   datapath_inst.sync_controller_config();
   
-  // === OUTPUT PHASE ===
-  // Update output signals
+  // === OUTPUT PINS ===
   data_out.write(memory_map_inst.data_out);
   tx_out.write(datapath_inst.tx_out);
   tx_buffer_full.write(datapath_inst.tx_buffer_full);
