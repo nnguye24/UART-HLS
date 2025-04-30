@@ -174,7 +174,6 @@ void controller::controller_fsm() {
                     tx_bit_counter++;
                 }
                 break;
-                
             case TX_PARITY_BIT:
                 out_tx_parity = true;
                 tx_next_state = TX_STOP_BIT;
@@ -223,12 +222,14 @@ void controller::controller_fsm() {
                 }
                 break;
                 
-            case RX_DATA_BITS:
+            case RX_DATA_BITS:  
+                // is asserting two control signals recommended???
+
                 out_rx_data = true;
                 
                 if(rx_bit_counter >= in_data_bits - 1) {
                     if(in_parity_enabled) {
-                        rx_next_state = RX_PARITY_CHECK;
+                        rx_next_state = RX_PARITY_LOAD;
                     } else {
                         rx_next_state = RX_STOP_BIT;
                     }
@@ -237,9 +238,14 @@ void controller::controller_fsm() {
                     rx_bit_counter++;
                 }
                 break;
+            // Intermediate State so that datapath calcualtes parity and sends it back
+
+            case RX_PARITY_LOAD:
+                out_rx_parity = true;
+                rx_next_state = RX_PARITY_CHECK;
+                break;
                 
             case RX_PARITY_CHECK:
-                out_rx_parity = true;
                 
                 if(in_parity_error) {
                     rx_next_state = ERROR_HANDLING;

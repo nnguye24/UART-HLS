@@ -261,7 +261,7 @@
       
      if (in_tx_data) {
          // Send data bits (LSB first)
-         next_tx_out = tx_shift_register[0];
+         next_tx_out = tx_shift_register[0];    // tx_out is a TX pin
          next_tx_shift_register = tx_shift_register >> 1;
      }
       

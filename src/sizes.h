@@ -37,7 +37,8 @@
 #define RX_START_BIT 9
 #define RX_DATA_BITS 10
 #define RX_PARITY_CHECK 11
-#define RX_STOP_BIT 12
-#define ERROR_HANDLING 13
+#define RX_PARITY_LOAD 12
+#define RX_STOP_BIT 13
+#define ERROR_HANDLING 14
 
 #endif
