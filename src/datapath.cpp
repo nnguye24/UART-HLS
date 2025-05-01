@@ -81,6 +81,7 @@
              wait();
         }
      }
+    }
  
  void datapath::reset_datapath_clear_regs() {
      load_tx_phase = false;
