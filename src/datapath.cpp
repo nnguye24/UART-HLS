@@ -7,7 +7,6 @@
  **************************************************************/
 
  #include "datapath.h"
- #include <iostream>
  
  using namespace std;
  
@@ -86,8 +85,8 @@
              HLS_DEFINE_PROTOCOL("wait");
              wait();
         }
-     }
     }
+}
  
  void datapath::reset_datapath_clear_regs() {
      load_tx_phase = false;
@@ -117,8 +116,7 @@
      out_dp_write_enable = false;
      
      // Reset baud rate generation
-     baud_divider = 0x0003;  // Default baud rate divisor, 
-     baud_counter = 0;
+     out_baud_divider = 0x0003;  // Default baud rate divisor
      
      // Reset configuration
      parity_enabled = false;
@@ -183,6 +181,7 @@
      dp_data_in.write(out_dp_data_in);
      dp_addr.write(out_dp_addr);
      dp_write_enable.write(out_dp_write_enable);
+     baud_divisor.write(out_baud_divider);  // Added baud_divisor output
  }
  
  void datapath::compute() {
@@ -193,7 +192,8 @@
      }
      
      // First, update configuration from memory map
-     update_configuration();
+     update_configuration();    // this placement might be a problem
+     // we want to constantly update the configuration so that it is up to date.
      
      // Process TX and RX independently
      compute_tx();
@@ -228,7 +228,7 @@
      sc_uint<DATA_W> baud_high = in_data_in;
      
      // Combine to form 16-bit baud rate divisor
-     baud_divider = (baud_high << 8) | baud_low;
+     out_baud_divider = (baud_high << 8) | baud_low;
      // Baud_divider is what out baud counter counts up to
      // currently don't have a baud counter. 
  }
@@ -443,4 +443,3 @@
      // Check if TX buffer is full
      return ((tx_buf_head + 1) % TX_BUFFER_SIZE) == tx_buf_tail;
  }
- 

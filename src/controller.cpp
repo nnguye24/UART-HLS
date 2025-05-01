@@ -6,7 +6,6 @@
  * UART Controller FSM implementation
  **************************************************************/
 #include "controller.h"
-#include <iostream>
 
 using namespace std;
 
@@ -107,7 +106,7 @@ void controller::read_inputs() {
     in_parity_error = parity_error.read();
     in_framing_error = framing_error.read();
     in_overrun_error = overrun_error.read();
-    
+    in_baud_divisor = baud_divisor.read();  // what we count up to with baud counter
     // Read configuration
     in_parity_enabled = parity_enabled.read();
     in_parity_even = parity_even.read();

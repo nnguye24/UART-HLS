@@ -44,6 +44,7 @@
      sc_out<bool> ctrl_parity_even;    // Port 20
      sc_out<sc_uint<3>> ctrl_data_bits;// Port 21
      sc_out<sc_uint<2>> ctrl_stop_bits;// Port 22
+     sc_out<sc_uint<16>> baud_divisor;
      
      // External interface
      sc_in<bool> rx_in;                // Port 23 - Serial input

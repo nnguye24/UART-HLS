@@ -5,20 +5,6 @@
 #include "stratus_hls.h"
 #include "sizes.h"
 
-#define TX_IDLE 1
-#define RX_IDLE 1
-#define LOAD_TX2 2
-#define TX_START_BIT 3
-#define TX_DATA_BITS 4 
-#define TX_PARITY_BIT 5
-#define TX_STOP_BIT 6
-#define RX_START_BIT 2
-#define RX_DATA_BITS 3
-#define RX_PARITY_CHECK 4
-#define RX_STOP_BIT 5
-#define ERROR_HANDLING 6
-
-
 
 SC_MODULE(controller) {
     // Clock and reset
@@ -44,6 +30,7 @@ SC_MODULE(controller) {
     sc_in<bool> parity_even;                // Port 11
     sc_in<sc_uint<3>> data_bits;            // Port 12
     sc_in<sc_uint<2>> stop_bits;            // Port 13
+    sc_in<sc_uint<16>> baud_divisor; 
     
     // Control outputs
     sc_out<bool> load_tx;                   // Port 14
@@ -72,6 +59,7 @@ SC_MODULE(controller) {
     bool rx_parity_value;
     bool tx_done;
     bool rx_done;
+    sc_uint<16> baud_counter;
     
     // Internal input values
     sc_bit in_start;
@@ -86,6 +74,8 @@ SC_MODULE(controller) {
     sc_bit in_parity_even;
     sc_uint<3> in_data_bits;
     sc_uint<2> in_stop_bits;
+    sc_uint<16> in_baud_divisor; 
+
     
     // Internal output values
     sc_bit out_load_tx;
