@@ -46,12 +46,18 @@
      }
      
      while(true) {
-         {
+        {       
+            HLS_DEFINE_PROTOCOL("wait");
+      
+            in_start = start.read();
+            wait();
+        }
+        {
             HLS_DEFINE_PROTOCOL("read_mem_we");
       
             // Read in the 
-            in_mem_we = mem_we.read();  // Port 3
-          }
+            in_mem_we = mem_we.read(); 
+        }
          
          // Check if memory write is active
         if(!in_mem_we) {
@@ -111,7 +117,7 @@
      out_dp_write_enable = false;
      
      // Reset baud rate generation
-     baud_divider = 0x0003;  // Default baud rate divisor
+     baud_divider = 0x0003;  // Default baud rate divisor, 
      baud_counter = 0;
      
      // Reset configuration
@@ -142,7 +148,7 @@
  
  void datapath::read_inputs() {
      // Read all input ports
-     in_start = start.read();
+     // in_start = start.read();
      in_mem_we = mem_we.read();
      in_load_tx = load_tx.read();
      in_load_tx2 = load_tx2.read();
@@ -223,6 +229,8 @@
      
      // Combine to form 16-bit baud rate divisor
      baud_divider = (baud_high << 8) | baud_low;
+     // Baud_divider is what out baud counter counts up to
+     // currently don't have a baud counter. 
  }
  
  // TX compute method
