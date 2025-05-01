@@ -37,7 +37,7 @@
  void datapath::process() {
      {
          HLS_DEFINE_PROTOCOL("reset");
-         reset();
+         reset_datapath_clear_regs();
      }
      
      {       
@@ -46,48 +46,43 @@
      }
      
      while(true) {
-         // Read inputs
          {
-             HLS_DEFINE_PROTOCOL("input");
-             read_inputs();
-         }
+            HLS_DEFINE_PROTOCOL("read_mem_we");
+      
+            // Read in the 
+            in_mem_we = mem_we.read();  // Port 3
+          }
          
          // Check if memory write is active
-         if(!in_mem_we) {
-             if(in_start) {
-                 {
-                     HLS_DEFINE_PROTOCOL("start");
-                     reset();
-                 }
-             } else {
-                 {
-                     HLS_DEFINE_PROTOCOL("datapath_ops");
-                     compute();
-                 }
-                 
-                 {
-                     HLS_DEFINE_PROTOCOL("output");
-                     commit();
-                     write_outputs();
-                 }
-             }
-         }
+        if(!in_mem_we) {
+                {
+                    HLS_DEFINE_PROTOCOL("start");
+                    reset_datapath_clear_regs();
+                }
+            } else {
+                {
+                    HLS_DEFINE_PROTOCOL("input");
+                    read_inputs();
+                }
+
+                {
+                    HLS_DEFINE_PROTOCOL("datapath_ops");
+                    compute();
+                }
+        }
+        {
+            HLS_DEFINE_PROTOCOL("outputs");
+            write_outputs();
+        }
          
          // Wait for next cycle
-         {       
+        {       
              HLS_DEFINE_PROTOCOL("wait");
              wait();
-         }
-         
-         // Additional wait for processing time
-         {       
-             HLS_DEFINE_PROTOCOL("wait");
-             wait();
-         }
+        }
      }
- }
  
- void datapath::reset() {
+ void datapath::reset_datapath_clear_regs() {
      load_tx_phase = false;
  
      // Reset transmit and receive registers
@@ -186,7 +181,7 @@
  void datapath::compute() {
      // Reset logic
      if (rst.read()) {
-         reset();
+         reset_datapath_clear_regs();
          return;
      }
      
@@ -440,12 +435,3 @@
      return ((tx_buf_head + 1) % TX_BUFFER_SIZE) == tx_buf_tail;
  }
  
- // New method to provide configuration to controller 
- void datapath::sync_controller_config() {
-     // This is already done in update_configuration
-     // Just making sure all the controller config signals are updated
-     out_ctrl_parity_enabled = parity_enabled;
-     out_ctrl_parity_even = parity_even;
-     out_ctrl_data_bits = data_bits;
-     out_ctrl_stop_bits = stop_bits;
- }
