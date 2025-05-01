@@ -42,7 +42,7 @@ void controller::process() {
                 }
                 
                 {
-                    HLS_DEFINE_PROTOCOL("output");
+                    HLS_DEFINE_PROTOCOL("output"); 
                     write_outputs();
                 }
             }

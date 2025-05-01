@@ -36,7 +36,9 @@
      // Processing phase
      {
        HLS_DEFINE_PROTOCOL("datapath_ops");
-       
+       // maybe another wait protocol?
+
+
        // Allow modules to process
        // They will read from their input ports
        // The modules' process methods are triggered by clock edges
@@ -109,6 +111,7 @@
      std::cout << "datapath_inst.tx_shift_register - " << datapath_inst.tx_shift_register << std::endl;
      return false;
    }
+   
    
    if(!rx_reg_ok) {
      std::cout << "datapath_inst.rx_shift_register - " << datapath_inst.rx_shift_register << std::endl;
