@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include "systemc.h"
+#include <systemc>
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
@@ -107,10 +107,20 @@ int sc_main(int argc, char* argv[]) {
     cout << "\n--- TEST 1: TRANSMIT 0xA5 ---\n";
     data_in.write(0xA5);
     load_tx.write(true);
+    run_instruction(dp, current_time, cycle_time, "load_tx", 1);
+    load_tx.write(false);
     load_tx2.write(true);
+    run_instruction(dp, current_time, cycle_time, "load_tx2", 1);
+    load_tx2.write(false);
     tx_start.write(true);
+    run_instruction(dp, current_time, cycle_time, "tx_start", 1);
+    tx_start.write(false);
     tx_data.write(true);
-    run_instruction(dp, current_time, cycle_time, "TEST 1--RUN", 1);
+    for (int i = 0; i < 8; ++i) run_instruction(dp, current_time, cycle_time, "tx_data", 1);
+    tx_data.write(false);
+    tx_stop.write(true);
+    run_instruction(dp, current_time, cycle_time, "tx_stop", 1);
+    tx_stop.write(false);
     cout << "TEST 1 passed\n";
 
     // === TEST 2: RECEIVE 0x3C ===
@@ -262,7 +272,7 @@ int sc_main(int argc, char* argv[]) {
     rx_data.write(false);
 
     rx_parity.write(true);
-    rx_in.write(0);  // wrong parity bit
+    rx_in.write(0);
     run_instruction(dp, current_time, cycle_time, "bad parity", 1);
     rx_parity.write(false);
 

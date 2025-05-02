@@ -8,7 +8,7 @@
  * and full two-phase stepping
  *********************************************/
 
-#include <systemc>
+#include "systemc.h"
 #include "../src/memory_map.h"
 #include "../src/sizes.h"
 #include <cassert>
