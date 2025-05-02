@@ -15,7 +15,6 @@
  #include "datapath.h"
  #include "controller.h"
  #include "memory_map.h"
- 
  SC_MODULE(top) {
    // Inputs from testbench
    sc_in<bool> clk;                        // Port 0
@@ -67,6 +66,7 @@
    sc_signal<bool> dp_to_ctrl_parity_even;
    sc_signal<sc_uint<3>> dp_to_ctrl_data_bits;
    sc_signal<sc_uint<2>> dp_to_ctrl_stop_bits;
+   sc_signal<sc_uint<16>> dp_to_ctrl_baud_divisor;
    
    // Memory map to datapath signals
    sc_signal<sc_uint<DATA_W>> mem_to_dp_data;
@@ -132,6 +132,7 @@
      datapath_inst.ctrl_parity_even(dp_to_ctrl_parity_even);
      datapath_inst.ctrl_data_bits(dp_to_ctrl_data_bits);
      datapath_inst.ctrl_stop_bits(dp_to_ctrl_stop_bits);
+     datapath_inst.baud_divisor(dp_to_ctrl_baud_divisor);
      datapath_inst.rx_in(rx_in);
      datapath_inst.tx_out(tx_out);
      datapath_inst.data_in(mem_to_dp_data);
@@ -158,6 +159,7 @@
      controller_inst.parity_even(dp_to_ctrl_parity_even);
      controller_inst.data_bits(dp_to_ctrl_data_bits);
      controller_inst.stop_bits(dp_to_ctrl_stop_bits);
+     controller_inst.baud_divisor(dp_to_ctrl_baud_divisor);
      controller_inst.load_tx(ctrl_to_dp_load_tx);
      controller_inst.load_tx2(ctrl_to_dp_load_tx2);
      controller_inst.tx_start(ctrl_to_dp_tx_start);

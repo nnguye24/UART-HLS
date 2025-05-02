@@ -73,6 +73,7 @@
      void commit();
      
      // Processing methods
+     void get_config();
      void update_configuration();
      void compute_tx();
      void compute_rx();

@@ -1,204 +1,220 @@
 /**************************************************************
  * File Name: top.h
- * Author: Matthew Morrison
- * Date: 4/1/2025
+ * Authors: Luke Guenthner, Nguyen Nguyen, Marcellus Wilson
+ * Date: 4/29/2025
  *
- * Contains the SystemC Module Header for the albacore top-level module
+ * Contains the SystemC Module Header for the UART top-level module
  **************************************************************/
 
-// Step 1a - Define the Header File
-#ifndef __TOP_H__
-#define __TOP_H__
-
-// Step 2 - Include the libraries
-#include "systemc.h" // SystemC Library
-#include "stratus_hls.h" // Cadence Stratus
-
-// Step 3 - Call sizes.h
-#include "sizes.h"
-
-// Step 3-1 - Call all the .h files
-#include "datapath.h"
-#include "controller.h"
-#include "memory_map.h"
-
-
-// Step 4 Defining the SC_MODULE
-SC_MODULE(top){
-
-  // Step 4-1 - Define the inputs and outputs to the datapath
-  sc_in<bool> clk;                        // Port 0
-  sc_in<bool> reset;                      // Port 1
-  sc_in<bool> start;                      // Port 2
-  sc_in< sc_bv<ADDR_W> > mem_addr;        // Port 3
-  sc_in< sc_bv<DATA_W> > mem_data;        // Port 4
-  sc_in<bool> mem_we;                     // Port 5
-  sc_in< sc_bv<4> > io_in;                // Port 6
+ #ifndef __TOP_H__
+ #define __TOP_H__
  
-  sc_out< sc_bv<DATA_W> > mem_data_out;   // Port 7
-  sc_out< sc_bv<4> > io_out;              // Port 8
-
-
-  // Step 5 - Create all internal elements
-  datapath datapath_inst;
-  controller controller_inst;
-  memory_map memory_map_inst;
-
-  // Create Intermediate Signals
-
-  // Datapath Input connections as sc_signals
-  sc_signal< sc_bv<ALU_OP_W> > ctrl_to_dp_alu_op;      // Port 11 to Port 4
-  sc_signal< sc_bv<DATA_W> > mem_to_dp_data_in;        // Port 8 to Port 5
-  sc_signal<bool> ctrl_to_dp_enable_instruction;   // Port 8 to Port 6
-  sc_signal<bool> ctrl_to_dp_enable_a;             // Port 9 to Port 7
-  sc_signal<bool> ctrl_to_dp_enable_b;             // Port 10 to Port 8
-  sc_signal<bool> ctrl_to_dp_enable_pc;            // Port 16 to Port 9  
-  sc_signal<bool> ctrl_to_dp_enable_alu_result;    // Port 12 to Port 10 
-  sc_signal<bool> ctrl_to_dp_enable_mdr;           // Port 18 to Port 11
-  sc_signal<bool>  ctrl_to_dp_s_regfile_rw;         // Port 15 to Port 12 
-  sc_signal<bool>  ctrl_to_dp_s_regfile_din;        // Port 13 to Port 13  
-  sc_signal<bool>  ctrl_to_dp_reg_write;            // Port 14 to Port 14   
-  sc_signal<bool>  ctrl_to_dp_s_addr;               // Port 7 to Port 15
-
-  // Datapath outputs to MUX
-  sc_signal< sc_bv<DATA_W> > dp_to_mem_data_out;       // Port 17
-  sc_signal< sc_bv<ADDR_W> > dp_to_mem_addr_out;       // Port 18
-
-  // Controller Inputs
-  sc_signal< sc_bv<ALU_OP_W> > dp_to_ctrl_opcode;    // Port 16 to Port 4
-  sc_signal<bool> dp_to_ctrl_zero;                   // Port 19 to Port 5
-  sc_signal<bool> dp_to_ctrl_neg;                    // Port 20 to Port 6
-
-  // Controller outputs to MUX
-  sc_signal<bool>  ctrl_to_mem_we_mem;              // Port 17
-
-  // Step 6-4 - Create a method called process to run the thread
-  void process();
-
-  void read_inputs();
-  void write_outputs();
-
-  // Copy the *test* method name from tb_datapath, tb_controller,and tb_memory_map
-  bool test_reset_datapath();
-  bool test_reset_controller();
-  bool test_reset_memory_map();
-
-
-  // Step 8-2 - Create the intermediate values from the inputs/outputs from the SC_MODULE
-  //No clk or reset use sc_bit for bool
-  sc_signal<bool> in_start;                       // Port 2
-  sc_signal<sc_bv<ADDR_W>> in_mem_addr;         // Port 3
-  sc_signal<sc_bv<DATA_W>> in_mem_data;         // Port 4
-  sc_signal<bool> in_mem_we;                      // Port 5
-  sc_signal<sc_bv<4>> in_io_in;                 // Port 6
-  
-  sc_signal< sc_bv<DATA_W> > out_mem_data_out;                 // Port 7
-  sc_signal< sc_bv<4> > out_io_out;               // Port 8
-
-  
-  // Step 6-1 - Define the Constructor - Create all internal elements in the member initialization list
- SC_CTOR(top) : datapath_inst("datapath_inst"), controller_inst("controller_inst"), memory_map_inst("memory_map_inst") {
-    
-    // Step 6-2 - Define the Clocked thread
-    SC_THREAD(process);
-    
-    // Step 6-3 - Define the Asynchronous reset
-    sensitive << clk.pos();
-
-    async_reset_signal_is(reset, false);
-
-    // Binding input ports to internal signals using combinational logic
-    SC_METHOD(read_inputs); 
-    sensitive << start << mem_addr << mem_data << mem_we << io_in;
-    
-    // SC_METHOD(write_outputs); 
-    // sensitive << out_mem_data_out << out_io_out;
-
-   // Connect all the Datapath Signals
-    datapath_inst.clk(clk);                                          // Port 0
-    datapath_inst.reset(reset);                                      // Port 1
-    datapath_inst.start(in_start);                                      // Port 2
-    datapath_inst.mem_we(in_mem_we);                                    // Port 3
-    datapath_inst.alu_op(ctrl_to_dp_alu_op);                         // Port 4
-    datapath_inst.data_in(out_mem_data_out);                        // Port 5 ** Changed
-    datapath_inst.enable_instruction(ctrl_to_dp_enable_instruction); // Port 6
-    datapath_inst.enable_a(ctrl_to_dp_enable_a);                     // Port 7
-    datapath_inst.enable_b(ctrl_to_dp_enable_b);                     // Port 8
-    datapath_inst.enable_pc(ctrl_to_dp_enable_pc);                   // Port 9
-    datapath_inst.enable_alu_result(ctrl_to_dp_enable_alu_result);   // Port 10
-    datapath_inst.enable_mdr(ctrl_to_dp_enable_mdr);                 // Port 11
-    datapath_inst.s_regfile_rw(ctrl_to_dp_s_regfile_rw);             // Port 12
-    datapath_inst.s_regfile_din(ctrl_to_dp_s_regfile_din);           // Port 13
-    datapath_inst.reg_write(ctrl_to_dp_reg_write);                   // Port 14
-    datapath_inst.s_addr(ctrl_to_dp_s_addr);                         // Port 15
-    datapath_inst.opcode(dp_to_ctrl_opcode);                         // Port 16
-    datapath_inst.data_out(dp_to_mem_data_out);                      // Port 17
-    datapath_inst.addr_out(dp_to_mem_addr_out);                      // Port 18
-    datapath_inst.zero(dp_to_ctrl_zero);                             // Port 19
-    datapath_inst.neg(dp_to_ctrl_neg);                               // Port 20
-  
-    // Connect all the Controller Signals
-    controller_inst.clk(clk);                                        // Port 0
-    controller_inst.reset(reset);                                    // Port 1
-    controller_inst.start(in_start);                                    // Port 2
-    controller_inst.mem_we(in_mem_we);                                  // Port 3
-    controller_inst.opcode(dp_to_ctrl_opcode);                       // Port 4
-    controller_inst.zero(dp_to_ctrl_zero);                           // Port 5
-    controller_inst.neg(dp_to_ctrl_neg);                             // Port 6
-    controller_inst.s_addr(ctrl_to_dp_s_addr);                       // Port 7
-    controller_inst.enable_instr(ctrl_to_dp_enable_instruction);     // Port 8
-    controller_inst.enable_a(ctrl_to_dp_enable_a);                   // Port 9
-    controller_inst.enable_b(ctrl_to_dp_enable_b);                   // Port 10    
-    controller_inst.alu_op(ctrl_to_dp_alu_op);                       // Port 11
-    controller_inst.enable_alu_result(ctrl_to_dp_enable_alu_result); // Port 12
-    controller_inst.s_regfile_rw(ctrl_to_dp_s_regfile_rw);           // Port 13
-    controller_inst.reg_write(ctrl_to_dp_reg_write);                 // Port 14
-    controller_inst.s_regfile_din(ctrl_to_dp_s_regfile_din);         // Port 15
-    controller_inst.enable_pc(ctrl_to_dp_enable_pc);                 // Port 16
-    controller_inst.we_mem(ctrl_to_mem_we_mem);                      // Port 17
-    controller_inst.enable_mdr(ctrl_to_dp_enable_mdr);               // Port 18
-
-    // Connect the inputs and outputs of the memory choice
-  
-    // Connect all the Memory Map signals
-    memory_map_inst.clk(clk);                                        // Port 0
-    memory_map_inst.reset(reset);                                    // Port 1
-    memory_map_inst.mem_addr(in_mem_addr);                           // Port 2
-    memory_map_inst.mem_din(in_mem_data);                            // Port 3
-    memory_map_inst.mem_we(in_mem_we);                               // Port 4
-    memory_map_inst.addr(dp_to_mem_addr_out);                           // Port 2
-    memory_map_inst.din(dp_to_mem_data_out);                            // Port 3
-    memory_map_inst.we(ctrl_to_mem_we_mem);                               // Port 4
-    memory_map_inst.io_in(in_io_in);                                 // Port 5
-    memory_map_inst.dout(out_mem_data_out);                         // Port 6
-    memory_map_inst.io_out(out_io_out);                              // Port 7
-
-  }
-
-  // Step 4-2 - Implement NC_SYSTEMC
-#ifdef NC_SYSTEMC
- public:
-  void ncsc_replace_names(){
-
-    // Replace all the names using ncsc_replace_name for inputs and output
-
-    // Inputs
-    ncsc_replace_name(clk, "clk");                      // Port 0
-    ncsc_replace_name(reset, "reset");                  // Port 1
-    ncsc_replace_name(start, "start");                  // Port 2
-    ncsc_replace_name(mem_addr, "mem_addr");            // Port 3
-    ncsc_replace_name(mem_data, "mem_data");            // Port 4
-    ncsc_replace_name(mem_we, "mem_we");                // Port 5
-    ncsc_replace_name(io_in, "io_in");                  // Port 6
+ #include "systemc.h"
+ #include "stratus_hls.h"
+ #include "sizes.h"
+ #include "datapath.h"
+ #include "controller.h"
+ #include "memory_map.h"
  
-    ncsc_replace_name(mem_data_out, "mem_data_out");    // Port 7
-    ncsc_replace_name(io_out, "io_out");                // Port 8
-
-  }
-
-#endif
-
-}; 
-
-
-#endif
+ SC_MODULE(top) {
+   // Inputs from testbench
+   sc_in<bool> clk;                        // Port 0
+   sc_in<bool> rst;                        // Port 1
+   sc_in<sc_uint<DATA_W>> data_in;         // Port 2
+   sc_in<sc_uint<ADDR_W>> addr;            // Port 3
+   sc_in<bool> chip_select;                // Port 4
+   sc_in<bool> read_write;                 // Port 5
+   sc_in<bool> write_enable;               // Port 6
+   sc_in<bool> rx_in;                      // Port 7
+ 
+   // Outputs to testbench
+   sc_out<sc_uint<DATA_W>> data_out;       // Port 8
+   sc_out<bool> tx_out;                    // Port 9
+   sc_out<bool> tx_buffer_full;            // Port 10
+   sc_out<bool> rx_buffer_empty;           // Port 11
+   sc_out<bool> error_indicator;           // Port 12
+ 
+   // Submodules
+   datapath datapath_inst;
+   controller controller_inst;
+   memory_map memory_map_inst;
+ 
+   // Internal signals for connecting modules
+   
+   // Controller to datapath signals
+   sc_signal<bool> ctrl_to_dp_load_tx;
+   sc_signal<bool> ctrl_to_dp_load_tx2;
+   sc_signal<bool> ctrl_to_dp_tx_start;
+   sc_signal<bool> ctrl_to_dp_tx_data;
+   sc_signal<bool> ctrl_to_dp_tx_parity;
+   sc_signal<bool> ctrl_to_dp_tx_stop;
+   sc_signal<bool> ctrl_to_dp_rx_start;
+   sc_signal<bool> ctrl_to_dp_rx_data;
+   sc_signal<bool> ctrl_to_dp_rx_parity;
+   sc_signal<bool> ctrl_to_dp_rx_stop;
+   sc_signal<bool> ctrl_to_dp_error_handle;
+   sc_signal<bool> ctrl_to_dp_rx_read;
+   
+   // Datapath to controller signals
+   sc_signal<bool> dp_to_ctrl_tx_buffer_full;
+   sc_signal<bool> dp_to_ctrl_rx_buffer_empty;
+   sc_signal<bool> dp_to_ctrl_parity_error;
+   sc_signal<bool> dp_to_ctrl_framing_error;
+   sc_signal<bool> dp_to_ctrl_overrun_error;
+   
+   // Configuration signals
+   sc_signal<bool> dp_to_ctrl_parity_enabled;
+   sc_signal<bool> dp_to_ctrl_parity_even;
+   sc_signal<sc_uint<3>> dp_to_ctrl_data_bits;
+   sc_signal<sc_uint<2>> dp_to_ctrl_stop_bits;
+   sc_signal<sc_uint<16>> dp_to_ctrl_baud_divisor;
+   
+   // Memory map to datapath signals
+   sc_signal<sc_uint<DATA_W>> mem_to_dp_data;
+   
+   // Datapath to memory map signals
+   sc_signal<sc_uint<DATA_W>> dp_to_mem_data;
+   sc_signal<sc_uint<ADDR_W>> dp_to_mem_addr;
+   sc_signal<bool> dp_to_mem_write_enable;
+   
+   // Internal signals for start and memory write enable
+   sc_signal<bool> start_signal;
+   sc_signal<bool> mem_we_signal;
+   
+   // Internal input values
+   bool in_rst;
+   sc_uint<DATA_W> in_data_in;
+   sc_uint<ADDR_W> in_addr;
+   bool in_chip_select;
+   bool in_read_write;
+   bool in_write_enable;
+   bool in_rx_in;
+   bool in_start;
+   bool in_mem_we;
+ 
+   // Top-level methods
+   void process();
+   void read_inputs();
+   void write_outputs();
+ 
+   // Test methods
+   bool test_reset_datapath();
+   bool test_reset_controller();
+   bool test_reset_memory_map();
+ 
+   SC_CTOR(top) : datapath_inst("datapath_inst"), 
+                 controller_inst("controller_inst"), 
+                 memory_map_inst("memory_map_inst") {
+     SC_THREAD(process);
+     sensitive << clk.pos();
+     async_reset_signal_is(rst, false);
+ 
+     // Connect all the Datapath Signals
+     datapath_inst.clk(clk);
+     datapath_inst.rst(rst);
+     datapath_inst.load_tx(ctrl_to_dp_load_tx);
+     datapath_inst.load_tx2(ctrl_to_dp_load_tx2);
+     datapath_inst.tx_start(ctrl_to_dp_tx_start);
+     datapath_inst.tx_data(ctrl_to_dp_tx_data);
+     datapath_inst.tx_parity(ctrl_to_dp_tx_parity);
+     datapath_inst.tx_stop(ctrl_to_dp_tx_stop);
+     datapath_inst.rx_start(ctrl_to_dp_rx_start);
+     datapath_inst.rx_data(ctrl_to_dp_rx_data);
+     datapath_inst.rx_parity(ctrl_to_dp_rx_parity);
+     datapath_inst.rx_stop(ctrl_to_dp_rx_stop);
+     datapath_inst.error_handle(ctrl_to_dp_error_handle);
+     datapath_inst.rx_read(ctrl_to_dp_rx_read);
+     datapath_inst.tx_buffer_full(dp_to_ctrl_tx_buffer_full);
+     datapath_inst.rx_buffer_empty(dp_to_ctrl_rx_buffer_empty);
+     datapath_inst.parity_error(dp_to_ctrl_parity_error);
+     datapath_inst.framing_error(dp_to_ctrl_framing_error);
+     datapath_inst.overrun_error(dp_to_ctrl_overrun_error);
+     datapath_inst.ctrl_parity_enabled(dp_to_ctrl_parity_enabled);
+     datapath_inst.ctrl_parity_even(dp_to_ctrl_parity_even);
+     datapath_inst.ctrl_data_bits(dp_to_ctrl_data_bits);
+     datapath_inst.ctrl_stop_bits(dp_to_ctrl_stop_bits);
+     datapath_inst.baud_divisor(dp_to_ctrl_baud_divisor);
+     datapath_inst.rx_in(rx_in);
+     datapath_inst.tx_out(tx_out);
+     datapath_inst.data_in(mem_to_dp_data);
+     datapath_inst.data_out(dp_to_mem_data);
+     datapath_inst.addr(dp_to_mem_addr);
+     datapath_inst.dp_data_in(dp_to_mem_data);
+     datapath_inst.dp_addr(dp_to_mem_addr);
+     datapath_inst.dp_write_enable(dp_to_mem_write_enable);
+     datapath_inst.start(start_signal);
+     datapath_inst.mem_we(mem_we_signal);
+     
+     // Connect all the Controller Signals
+     controller_inst.clk(clk);
+     controller_inst.rst(rst);
+     controller_inst.start(start_signal);
+     controller_inst.mem_we(mem_we_signal);
+     controller_inst.tx_buffer_full(dp_to_ctrl_tx_buffer_full);
+     controller_inst.rx_buffer_empty(dp_to_ctrl_rx_buffer_empty);
+     controller_inst.rx_in(rx_in);
+     controller_inst.parity_error(dp_to_ctrl_parity_error);
+     controller_inst.framing_error(dp_to_ctrl_framing_error);
+     controller_inst.overrun_error(dp_to_ctrl_overrun_error);
+     controller_inst.parity_enabled(dp_to_ctrl_parity_enabled);
+     controller_inst.parity_even(dp_to_ctrl_parity_even);
+     controller_inst.data_bits(dp_to_ctrl_data_bits);
+     controller_inst.stop_bits(dp_to_ctrl_stop_bits);
+     controller_inst.baud_divisor(dp_to_ctrl_baud_divisor);
+     controller_inst.load_tx(ctrl_to_dp_load_tx);
+     controller_inst.load_tx2(ctrl_to_dp_load_tx2);
+     controller_inst.tx_start(ctrl_to_dp_tx_start);
+     controller_inst.tx_data(ctrl_to_dp_tx_data);
+     controller_inst.tx_parity(ctrl_to_dp_tx_parity);
+     controller_inst.tx_stop(ctrl_to_dp_tx_stop);
+     controller_inst.rx_start(ctrl_to_dp_rx_start);
+     controller_inst.rx_data(ctrl_to_dp_rx_data);
+     controller_inst.rx_parity(ctrl_to_dp_rx_parity);
+     controller_inst.rx_stop(ctrl_to_dp_rx_stop);
+     controller_inst.rx_read(ctrl_to_dp_rx_read);
+     controller_inst.error_handle(ctrl_to_dp_error_handle);
+     
+     // Connect all the Memory Map signals
+     memory_map_inst.clk(clk);
+     memory_map_inst.rst(rst);
+     memory_map_inst.data_in(data_in);
+     memory_map_inst.data_out(data_out);
+     memory_map_inst.addr(addr);
+     memory_map_inst.chip_select(chip_select);
+     memory_map_inst.read_write(read_write);
+     memory_map_inst.write_enable(write_enable);
+     memory_map_inst.dp_data_out(mem_to_dp_data);
+     memory_map_inst.dp_data_in(dp_to_mem_data);
+     memory_map_inst.dp_addr(dp_to_mem_addr);
+     memory_map_inst.dp_write_enable(dp_to_mem_write_enable);
+     memory_map_inst.tx_buffer_full(dp_to_ctrl_tx_buffer_full);
+     memory_map_inst.rx_buffer_empty(dp_to_ctrl_rx_buffer_empty);
+     memory_map_inst.error_indicator(error_indicator);
+   }
+   
+ #ifdef NC_SYSTEMC
+  public:
+   void ncsc_replace_names(){
+     // Replace all the names using ncsc_replace_name for inputs and outputs
+     
+     // Inputs
+     ncsc_replace_name(clk, "clk");                      // Port 0
+     ncsc_replace_name(rst, "rst");                      // Port 1
+     ncsc_replace_name(data_in, "data_in");              // Port 2
+     ncsc_replace_name(addr, "addr");                    // Port 3
+     ncsc_replace_name(chip_select, "chip_select");      // Port 4
+     ncsc_replace_name(read_write, "read_write");        // Port 5
+     ncsc_replace_name(write_enable, "write_enable");    // Port 6
+     ncsc_replace_name(rx_in, "rx_in");                  // Port 7
+     
+     // Outputs
+     ncsc_replace_name(data_out, "data_out");            // Port 8
+     ncsc_replace_name(tx_out, "tx_out");                // Port 9
+     ncsc_replace_name(tx_buffer_full, "tx_buffer_full");// Port 10
+     ncsc_replace_name(rx_buffer_empty, "rx_buffer_empty");// Port 11
+     ncsc_replace_name(error_indicator, "error_indicator");// Port 12
+   }
+ #endif
+ };
+ 
+ #endif

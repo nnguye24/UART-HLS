@@ -34,20 +34,27 @@
  #define LCR_DLAB           0x80 // Bit 7: Divisor latch access bit
  
  void datapath::process() {
-     {
-         HLS_DEFINE_PROTOCOL("reset");
-         reset_datapath_clear_regs();
-     }
+    {
+        HLS_DEFINE_PROTOCOL("reset");
+        reset_datapath_clear_regs();
+    }
+    {
+        HLS_DEFINE_PROTOCOL("get_config");
+        get_config();
+    }
      
-     {       
-         HLS_DEFINE_PROTOCOL("wait");
-         wait();
-     }
+    {       
+        HLS_DEFINE_PROTOCOL("wait");
+        wait();
+    }
+    {
+        HLS_DEFINE_PROTOCOL("update");
+        update_configuration();
+    }
      
-     while(true) {
+    while(true) {
         {       
             HLS_DEFINE_PROTOCOL("wait");
-      
             in_start = start.read();
             wait();
         }
@@ -192,20 +199,25 @@
      }
      
      // First, update configuration from memory map
-     update_configuration();    // this placement might be a problem
-     // we want to constantly update the configuration so that it is up to date.
+    //  get_config();
+    //  update_configuration();    // this placement might be a problem
+    //  // we want to constantly update the configuration so that it is up to date.
      
      // Process TX and RX independently
      compute_tx();
      compute_rx();
  }
  
+
+ void datapath::get_config(){
+    // sends out config address to request data from that register
+    // in_data_in should change in the next clock cycle(read)
+    out_addr = LINE_CONTROL_REG;
+
+ }
  // New method to read and interpret configuration registers
  void datapath::update_configuration() {
-     // Request configuration register values by setting address
-     out_addr = LINE_CONTROL_REG;
-     
-     // Read line control register - in real hardware this would have a delay
+     // Read line control register
      sc_uint<DATA_W> lcr = in_data_in;
      
      // Extract configuration parameters
