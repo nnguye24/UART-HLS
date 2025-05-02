@@ -185,36 +185,6 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(false);
     cout << "TEST 3 passed\n";
 
-    /* === TEST 4: FRAMING ERROR ===
-    cout << "\n--- TEST 4: FRAMING ERROR ---\n";
-    rx_read.write(true);
-    run_instruction(dp, current_time, cycle_time, "clear RX", 1);
-    rx_read.write(false);
-    rx_in.write(0);
-    rx_start.write(true);
-    run_instruction(dp, current_time, cycle_time, "rx_start", 1);
-    rx_start.write(false);
-    rx_data.write(true);
-    for (int i = 0; i < 8; ++i) {
-        rx_in.write((0x3C >> i) & 1);
-        run_instruction(dp, current_time, cycle_time, "rx_data", 1);
-    }
-    rx_data.write(false);
-    rx_parity.write(true);
-    run_instruction(dp, current_time, cycle_time, "rx_parity", 1);
-    rx_parity.write(false);
-
-    // Write incorrect stop bit (0) and allow it to settle
-    rx_in.write(0);
-    run_instruction(dp, current_time, cycle_time, "prep bad stop", 1);  // ensure bad value is latched
-    rx_stop.write(true);
-    run_instruction(dp, current_time, cycle_time, "bad stop", 1);
-    rx_stop.write(false);
-
-    run_instruction(dp, current_time, cycle_time, "commit", 1);
-    assert(framing_error.read() && "Expected framing error");
-    cout << "TEST 4 passed\n";
-    */
     cout << "\n--- TEST 5: RX BUFFER EMPTY FLAG ---\n";
     assert(!rx_buffer_empty.read() && "Buffer should contain data");
     rx_read.write(true);
