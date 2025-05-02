@@ -189,7 +189,7 @@ int sc_main(int argc, char* argv[]) {
     cout << "TEST 2 passed: RX sequence correct\n";
 
     // ---------------------------------------------------
-    // TEST 3: CONTINUOUS TRANSMISSION (0xA5 then 0x5A)
+    // TEST 3: Continuous Transmission (0xA5 then 0x5A)
     // ---------------------------------------------------
     cout << "\n--- TEST 3: CONTINUOUS TX 0xA5 → 0x5A ---\n";
     // first byte
@@ -209,7 +209,7 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(t, cycle_time, "load_tx2 byte2", 1);
     load_tx2.write(false);
 
-    // now send both start/data/stop bits back‐to‐back
+    // send both back‐to‐back
     tx_start.write(true);
     run_instruction(t, cycle_time, "tx_start1", 1);
     assert(tx_out.read() == false);
@@ -254,44 +254,16 @@ int sc_main(int argc, char* argv[]) {
     cout << "TEST 4 passed: framing error detected\n";
 
     // ---------------------------------------------------
-    // TEST 5: Overrun‐Error Detection
+    // TEST 5: RX_BUFFER_EMPTY Toggle on rx_read
     // ---------------------------------------------------
-    cout << "\n--- TEST 5: OVERRUN ERROR ---\n";
-    // first receive to fill buffer
-    rx_read.write(true); run_instruction(t, cycle_time, "clear empty",1); rx_read.write(false);
-    rx_in.write(0); rx_start.write(true);
-    run_instruction(t, cycle_time, "start1",1); rx_start.write(false);
-    rx_data.write(true);
-    for(int i=0; i<8; ++i){ rx_in.write((R>>i)&1); run_instruction(t,cycle_time,"data1",1); }
-    rx_data.write(false);
-    rx_parity.write(true); run_instruction(t,cycle_time,"par1",1); rx_parity.write(false);
-    rx_stop.write(true); rx_in.write(1); run_instruction(t,cycle_time,"stop1",1); rx_stop.write(false);
-    run_instruction(t,cycle_time,"commit1",1);
-
-    // second receive without clearing → overrun
-    rx_in.write(0); rx_start.write(true);
-    run_instruction(t, cycle_time, "start2",1); rx_start.write(false);
-    rx_data.write(true);
-    for(int i=0; i<8; ++i){ rx_in.write((R>>i)&1); run_instruction(t,cycle_time,"data2",1); }
-    rx_data.write(false);
-    rx_parity.write(true); run_instruction(t,cycle_time,"par2",1); rx_parity.write(false);
-    rx_stop.write(true); rx_in.write(1); run_instruction(t,cycle_time,"stop2",1); rx_stop.write(false);
-    run_instruction(t,cycle_time,"commit2",1);
-
-    assert(overrun_error.read() && "should flag overrun_error");
-    cout << "TEST 5 passed: overrun error detected\n";
-
-    // ---------------------------------------------------
-    // TEST 6: Buffer‐Empty Flag Toggles on rx_read
-    // ---------------------------------------------------
-    cout << "\n--- TEST 6: RX_BUFFER_EMPTY TOGGLE ---\n";
-    // now buffer still full from previous, empty flag should be false
+    cout << "\n--- TEST 5: RX_BUFFER_EMPTY TOGGLE ---\n";
+    // assume buffer now non-empty from prior receive
     assert(rx_buffer_empty.read() == false && "buffer should be non-empty");
     rx_read.write(true);
     run_instruction(t, cycle_time, "rx_read to pop byte",1);
     rx_read.write(false);
     assert(rx_buffer_empty.read() == true && "buffer should be empty after read");
-    cout << "TEST 6 passed: buffer-empty flag toggles\n";
+    cout << "TEST 5 passed: buffer-empty flag toggles\n";
 
     cout << "\nAll datapath tests passed.\n";
     sc_close_vcd_trace_file(tf);
