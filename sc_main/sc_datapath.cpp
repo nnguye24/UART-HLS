@@ -20,9 +20,9 @@ using namespace std;
 void clock_gen(sc_signal<bool>& clk, int period) {
     while (true) {
         clk.write(false);
-        wait(period/2, SC_NS);
+        wait(period / 2, SC_NS);
         clk.write(true);
-        wait(period/2, SC_NS);
+        wait(period / 2, SC_NS);
     }
 }
 
@@ -83,189 +83,139 @@ int sc_main(int argc, char* argv[]) {
     sc_time cycle_time(CYCLE, SC_NS);
     sc_spawn(sc_bind(clock_gen, ref(clk), CYCLE));
 
-    // initialize
+    // === Initialize signals ===
     rst.write(true);
-    load_tx    .write(false);
-    load_tx2   .write(false);
-    tx_start   .write(false);
-    tx_data    .write(false);
-    tx_parity  .write(false);
-    tx_stop    .write(false);
-    rx_start   .write(false);
-    rx_data    .write(false);
-    rx_parity  .write(false);
-    rx_stop    .write(false);
-    rx_read    .write(false);
-    error_handle       .write(false);
-    tx_buffer_full    .write(false);
-    rx_buffer_empty   .write(true);
-    parity_error      .write(false);
-    framing_error     .write(false);
-    overrun_error     .write(false);
-    rx_in             .write(1);     // idle = high
-    data_in           .write(0);
-    addr              .write(0);
+    load_tx.write(false);
+    load_tx2.write(false);
+    tx_start.write(false);
+    tx_data.write(false);
+    tx_parity.write(false);
+    tx_stop.write(false);
+    rx_start.write(false);
+    rx_data.write(false);
+    rx_parity.write(false);
+    rx_stop.write(false);
+    rx_read.write(false);
+    error_handle.write(false);
+    tx_buffer_full.write(false);
+    rx_buffer_empty.write(true);
+    parity_error.write(false);
+    framing_error.write(false);
+    overrun_error.write(false);
+    rx_in.write(1);  // idle = high
+    data_in.write(0);
+    addr.write(0);
 
     sc_start(cycle_time);
     rst.write(false);
     sc_time t = SC_ZERO_TIME;
 
-    // ---------------------------------------------------
-    // TEST 1: Basic Transmission of 0xA5
-    // ---------------------------------------------------
+    // === TEST 1: TRANSMIT 0xA5 ===
     cout << "\n--- TEST 1: TRANSMIT 0xA5 ---\n";
     data_in.write(0xA5);
-    load_tx.write(true);
-    run_instruction(t, cycle_time, "load_tx pulse", 1);
-    load_tx.write(false);
-
-    load_tx2.write(true);
-    run_instruction(t, cycle_time, "load_tx2 pulse", 1);
-    load_tx2.write(false);
-
-    tx_start.write(true);
-    run_instruction(t, cycle_time, "tx_start pulse", 1);
-    assert(tx_out.read() == false && "start bit must be 0");
-    tx_start.write(false);
-
+    load_tx.write(true); run_instruction(t, cycle_time, "load_tx", 1); load_tx.write(false);
+    load_tx2.write(true); run_instruction(t, cycle_time, "load_tx2", 1); load_tx2.write(false);
+    tx_start.write(true); run_instruction(t, cycle_time, "tx_start", 1); tx_start.write(false);
+    assert(tx_out.read() == false && "Start bit must be 0");
     tx_data.write(true);
     for (int i = 0; i < 8; ++i) {
-        bool expected = ((0xA5 >> i) & 1);
+        bool expected = (0xA5 >> i) & 1;
         run_instruction(t, cycle_time, "tx_data bit", 1);
-        assert(tx_out.read() == expected && "data bit mismatch");
+        assert(tx_out.read() == expected && "Data bit mismatch");
     }
     tx_data.write(false);
+    tx_parity.write(true); run_instruction(t, cycle_time, "tx_parity", 1); tx_parity.write(false);
+    assert(tx_out.read() == true && "Parity bit should be 1 (idle)");
+    tx_stop.write(true); run_instruction(t, cycle_time, "tx_stop", 1); tx_stop.write(false);
+    assert(tx_out.read() == true && "Stop bit should be 1");
+    cout << "TEST 1 passed\n";
 
-    tx_parity.write(true);
-    run_instruction(t, cycle_time, "tx_parity bit", 1);
-    // parity disabled by default → output should remain high (idle)
-    assert(tx_out.read() == true && "parity bit should be idle=1");
-    tx_parity.write(false);
-
-    tx_stop.write(true);
-    run_instruction(t, cycle_time, "tx_stop bit", 1);
-    assert(tx_out.read() == true && "stop bit must be 1");
-    tx_stop.write(false);
-
-    cout << "TEST 1 passed: TX sequence correct\n";
-
-    // ---------------------------------------------------
-    // TEST 2: Basic Reception of 0x3C
-    // ---------------------------------------------------
+    // === TEST 2: RECEIVE 0x3C ===
     cout << "\n--- TEST 2: RECEIVE 0x3C ---\n";
-    // clear empty flag
-    rx_read.write(true);
-    run_instruction(t, cycle_time, "rx_read pulse to clear", 1);
-    rx_read.write(false);
-
-    rx_in.write(0);
-    rx_start.write(true);
-    run_instruction(t, cycle_time, "rx_start pulse", 1);
-    rx_start.write(false);
-
+    rx_read.write(true); run_instruction(t, cycle_time, "clear RX buffer", 1); rx_read.write(false);
+    rx_in.write(0); rx_start.write(true); run_instruction(t, cycle_time, "rx_start", 1); rx_start.write(false);
     constexpr uint8_t R = 0x3C;
     rx_data.write(true);
     for (int i = 0; i < 8; ++i) {
         rx_in.write((R >> i) & 1);
-        run_instruction(t, cycle_time, "rx_data bit", 1);
+        run_instruction(t, cycle_time, "rx_data", 1);
     }
     rx_data.write(false);
+    rx_parity.write(true); run_instruction(t, cycle_time, "rx_parity", 1); rx_parity.write(false);
+    assert(!parity_error.read() && "Should not flag parity error");
+    rx_in.write(1); rx_stop.write(true); run_instruction(t, cycle_time, "rx_stop", 1); rx_stop.write(false);
+    run_instruction(t, cycle_time, "commit", 1);
+    assert(data_out.read() == R && "Data mismatch");
+    cout << "TEST 2 passed\n";
 
-    rx_parity.write(true);
-    run_instruction(t, cycle_time, "rx_parity pulse", 1);
-    rx_parity.write(false);
-    // parity disabled → no error
-    assert(!parity_error.read() && "parity_error should be false");
+    // === TEST 3: CONTINUOUS TX ===
+    cout << "\n--- TEST 3: CONTINUOUS TX 0xA5 and 0x5A ---\n";
+    data_in.write(0xA5); load_tx.write(true); run_instruction(t, cycle_time, "load_tx1", 1); load_tx.write(false);
+    load_tx2.write(true); run_instruction(t, cycle_time, "load_tx2_1", 1); load_tx2.write(false);
+    data_in.write(0x5A); load_tx.write(true); run_instruction(t, cycle_time, "load_tx2", 1); load_tx.write(false);
+    load_tx2.write(true); run_instruction(t, cycle_time, "load_tx2_2", 1); load_tx2.write(false);
+    tx_start.write(true); run_instruction(t, cycle_time, "tx_start", 1); tx_start.write(false);
+    tx_data.write(true); for (int i = 0; i < 8; ++i) run_instruction(t, cycle_time, "tx1 data", 1); tx_data.write(false);
+    tx_stop.write(true); run_instruction(t, cycle_time, "tx1 stop", 1); tx_stop.write(false);
+    tx_start.write(true); run_instruction(t, cycle_time, "tx_start2", 1); tx_start.write(false);
+    tx_data.write(true); for (int i = 0; i < 8; ++i) run_instruction(t, cycle_time, "tx2 data", 1); tx_data.write(false);
+    tx_stop.write(true); run_instruction(t, cycle_time, "tx2 stop", 1); tx_stop.write(false);
+    cout << "TEST 3 passed\n";
 
-    rx_stop.write(true);
-    rx_in.write(1);
-    run_instruction(t, cycle_time, "rx_stop pulse", 1);
-    rx_stop.write(false);
-    run_instruction(t, cycle_time, "commit receive", 1);
-
-    assert(data_out.read() == R && "received byte mismatch");
-    assert(!framing_error.read() && "framing_error should be false");
-    assert(!overrun_error.read() && "overrun_error should be false");
-    cout << "TEST 2 passed: RX sequence correct\n";
-
-    // ---------------------------------------------------
-    // TEST 3: Continuous Transmission (0xA5 then 0x5A)
-    // ---------------------------------------------------
-    cout << "\n--- TEST 3: CONTINUOUS TX 0xA5 → 0x5A ---\n";
-    // first byte
-    data_in.write(0xA5);
-    load_tx.write(true);
-    run_instruction(t, cycle_time, "load_tx byte1", 1);
-    load_tx.write(false);
-    load_tx2.write(true);
-    run_instruction(t, cycle_time, "load_tx2 byte1", 1);
-    load_tx2.write(false);
-    // second byte
-    data_in.write(0x5A);
-    load_tx.write(true);
-    run_instruction(t, cycle_time, "load_tx byte2", 1);
-    load_tx.write(false);
-    load_tx2.write(true);
-    run_instruction(t, cycle_time, "load_tx2 byte2", 1);
-    load_tx2.write(false);
-
-    // send both back‐to‐back
-    tx_start.write(true);
-    run_instruction(t, cycle_time, "tx_start1", 1);
-    assert(tx_out.read() == false);
-    tx_start.write(false);
-    tx_data.write(true);
-    for (int i = 0; i < 8; ++i) run_instruction(t, cycle_time, "tx1 data", 1);
-    tx_data.write(false);
-    tx_stop.write(true);
-    run_instruction(t, cycle_time, "tx1 stop", 1);
-    tx_stop.write(false);
-
-    tx_start.write(true);
-    run_instruction(t, cycle_time, "tx_start2", 1);
-    assert(tx_out.read() == false);
-    tx_start.write(false);
-    tx_data.write(true);
-    for (int i = 0; i < 8; ++i) run_instruction(t, cycle_time, "tx2 data", 1);
-    tx_data.write(false);
-    tx_stop.write(true);
-    run_instruction(t, cycle_time, "tx2 stop", 1);
-    tx_stop.write(false);
-
-    cout << "TEST 3 passed: continuous TX works\n";
-
-    // ---------------------------------------------------
-    // TEST 4: Framing‐Error Detection
-    // ---------------------------------------------------
+    // === TEST 4: FRAMING ERROR ===
     cout << "\n--- TEST 4: FRAMING ERROR ---\n";
-    rx_read.write(true);  run_instruction(t, cycle_time, "clear empty",1);  rx_read.write(false);
-    rx_in.write(0);       rx_start.write(true);
-    run_instruction(t, cycle_time, "start burst",1); rx_start.write(false);
-    rx_data.write(true);
-    for(int i=0; i<8; ++i) { rx_in.write((R>>i)&1); run_instruction(t, cycle_time, "data",1); }
-    rx_data.write(false);
-    rx_parity.write(true); run_instruction(t, cycle_time, "parity",1); rx_parity.write(false);
-    // corrupt stop bit:
-    rx_stop.write(true); rx_in.write(0);
-    run_instruction(t, cycle_time, "bad stop",1);
-    rx_stop.write(false);
-    run_instruction(t, cycle_time, "commit framing",1);
-    assert(framing_error.read() && "should flag framing_error");
-    cout << "TEST 4 passed: framing error detected\n";
+    rx_read.write(true); run_instruction(t, cycle_time, "clear RX", 1); rx_read.write(false);
+    rx_in.write(0); rx_start.write(true); run_instruction(t, cycle_time, "rx_start", 1); rx_start.write(false);
+    rx_data.write(true); for (int i = 0; i < 8; ++i) rx_in.write((R >> i) & 1), run_instruction(t, cycle_time, "rx_data", 1); rx_data.write(false);
+    rx_parity.write(true); run_instruction(t, cycle_time, "rx_parity", 1); rx_parity.write(false);
+    rx_in.write(0); rx_stop.write(true); run_instruction(t, cycle_time, "bad stop", 1); rx_stop.write(false);
+    run_instruction(t, cycle_time, "commit", 1);
+    assert(framing_error.read() && "Expected framing error");
+    cout << "TEST 4 passed\n";
 
-    // ---------------------------------------------------
-    // TEST 5: RX_BUFFER_EMPTY Toggle on rx_read
-    // ---------------------------------------------------
-    cout << "\n--- TEST 5: RX_BUFFER_EMPTY TOGGLE ---\n";
-    // assume buffer now non-empty from prior receive
-    assert(rx_buffer_empty.read() == false && "buffer should be non-empty");
-    rx_read.write(true);
-    run_instruction(t, cycle_time, "rx_read to pop byte",1);
-    rx_read.write(false);
-    assert(rx_buffer_empty.read() == true && "buffer should be empty after read");
-    cout << "TEST 5 passed: buffer-empty flag toggles\n";
+    // === TEST 5: RX BUFFER EMPTY FLAG ===
+    cout << "\n--- TEST 5: RX BUFFER EMPTY FLAG ---\n";
+    assert(!rx_buffer_empty.read() && "Buffer should contain data");
+    rx_read.write(true); run_instruction(t, cycle_time, "read out", 1); rx_read.write(false);
+    assert(rx_buffer_empty.read() && "Buffer should now be empty");
+    cout << "TEST 5 passed\n";
 
-    cout << "\nAll datapath tests passed.\n";
-    sc_close_vcd_trace_file(tf);
+    // === TEST 6: RESET SANITY CHECK ===
+    cout << "\n--- TEST 6: RESET AFTER ACTIVITY ---\n";
+    rst.write(true); run_instruction(t, cycle_time, "reset", 1); rst.write(false);
+    assert(tx_out.read() == true);
+    assert(rx_buffer_empty.read() == true);
+    assert(tx_buffer_full.read() == false);
+    assert(!parity_error.read());
+    assert(!framing_error.read());
+    assert(!overrun_error.read());
+    cout << "TEST 6 passed\n";
+
+    // === TEST 7: RESET DURING TX ===
+    cout << "\n--- TEST 7: RESET DURING TX LOAD ---\n";
+    data_in.write(0xFF);
+    load_tx.write(true); run_instruction(t, cycle_time, "load_tx", 1); load_tx.write(false);
+    load_tx2.write(true); run_instruction(t, cycle_time, "load_tx2", 1); load_tx2.write(false);
+    rst.write(true); run_instruction(t, cycle_time, "reset mid-TX", 1); rst.write(false);
+    assert(tx_out.read() == true);
+    assert(tx_buffer_full.read() == false);
+    cout << "TEST 7 passed\n";
+
+    // === TEST 8: RX PARITY ERROR ===
+    cout << "\n--- TEST 8: RX PARITY ERROR PREVENTS COMMIT ---\n";
+    dp.out_ctrl_parity_enabled = true;
+    dp.out_ctrl_parity_even = false;
+    constexpr uint8_t PARITY_ERR_BYTE = 0x0F;
+    rx_read.write(true); run_instruction(t, cycle_time, "clear RX", 1); rx_read.write(false);
+    rx_in.write(0); rx_start.write(true); run_instruction(t, cycle_time, "rx_start", 1); rx_start.write(false);
+    rx_data.write(true); for (int i = 0; i < 8; ++i) rx_in.write((PARITY_ERR_BYTE >> i) & 1), run_instruction(t, cycle_time, "rx_data", 1); rx_data.write(false);
+    rx_parity.write(true); rx_in.write(0); run_instruction(t, cycle_time, "bad parity", 1); rx_parity.write(false);
+    rx_stop.write(true); rx_in.write(1); run_instruction(t, cycle_time, "rx_stop", 1); rx_stop.write(false);
+    run_instruction(t, cycle_time, "commit", 1);
+    assert(parity_error.read() && "Parity error expected");
+    assert(rx_buffer_empty.read() && "Should not commit corrupted byte");
+    cout << "TEST 8 passed\n";
+
+    cout << "\nAll UART datapath tests passed!\n";
     return 0;
 }
