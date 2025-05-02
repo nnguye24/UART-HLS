@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include "systemc.h"
+#include <systemc>
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
@@ -16,7 +16,6 @@
 
 using namespace std;
 
-// Advance simulation by n cycles with description
 void run_instruction(datapath& dp, sc_time& current_time, const sc_time& cycle_time, const std::string& detail, int n){
     std::cout << detail << std::endl;
     std::cout << "Instruction Cycle start time -" << current_time << std::endl;
@@ -30,7 +29,6 @@ int sc_main(int argc, char* argv[]) {
     sc_time current_time = SC_ZERO_TIME;
     sc_time cycle_time(CYCLE_LENGTH, SC_NS);
 
-    // === Signals ===
     sc_clock clk("clk", CYCLE_LENGTH, SC_NS);
     sc_signal<bool> rst;
     sc_signal<bool> load_tx, load_tx2, tx_start, tx_data, tx_parity, tx_stop;
@@ -44,8 +42,11 @@ int sc_main(int argc, char* argv[]) {
     sc_signal<sc_bv<DATA_W>> dp_data_in;
     sc_signal<sc_bv<ADDR_W>> dp_addr;
     sc_signal<bool> dp_write_enable;
+    sc_signal<bool> ctrl_parity_enabled;
+    sc_signal<bool> ctrl_parity_even;
+    sc_signal<sc_uint<3>> ctrl_data_bits;
+    sc_signal<sc_uint<2>> ctrl_stop_bits;
 
-    // === DUT Instantiation ===
     datapath dp("datapath");
     dp.clk(clk);
     dp.rst(rst);
@@ -76,8 +77,11 @@ int sc_main(int argc, char* argv[]) {
     dp.dp_data_in(dp_data_in);
     dp.dp_addr(dp_addr);
     dp.dp_write_enable(dp_write_enable);
+    dp.ctrl_parity_enabled(ctrl_parity_enabled);
+    dp.ctrl_parity_even(ctrl_parity_even);
+    dp.ctrl_data_bits(ctrl_data_bits);
+    dp.ctrl_stop_bits(ctrl_stop_bits);
 
-    // === Initialize signals ===
     rst.write(true);
     load_tx.write(false);
     load_tx2.write(false);
@@ -103,7 +107,6 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "RESET", 1);
     rst.write(false);
 
-    // === TEST 1: TRANSMIT 0xA5 ===
     cout << "\n--- TEST 1: TRANSMIT 0xA5 ---\n";
     data_in.write(0xA5);
     load_tx.write(true);
@@ -123,7 +126,6 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(false);
     cout << "TEST 1 passed\n";
 
-    // === TEST 2: RECEIVE 0x3C ===
     cout << "\n--- TEST 2: RECEIVE 0x3C ---\n";
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "clear RX buffer", 1);
@@ -148,7 +150,6 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "commit", 1);
     cout << "TEST 2 passed\n";
 
-    // === TEST 3: CONTINUOUS TX ===
     cout << "\n--- TEST 3: CONTINUOUS TX 0xA5 and 0x5A ---\n";
     data_in.write(0xA5);
     load_tx.write(true);
@@ -184,7 +185,6 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(false);
     cout << "TEST 3 passed\n";
 
-    // === TEST 4: FRAMING ERROR ===
     cout << "\n--- TEST 4: FRAMING ERROR ---\n";
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "clear RX", 1);
@@ -210,7 +210,6 @@ int sc_main(int argc, char* argv[]) {
     assert(framing_error.read() && "Expected framing error");
     cout << "TEST 4 passed\n";
 
-    // === TEST 5: RX BUFFER EMPTY FLAG ===
     cout << "\n--- TEST 5: RX BUFFER EMPTY FLAG ---\n";
     assert(!rx_buffer_empty.read() && "Buffer should contain data");
     rx_read.write(true);
@@ -219,7 +218,6 @@ int sc_main(int argc, char* argv[]) {
     assert(rx_buffer_empty.read() && "Buffer should now be empty");
     cout << "TEST 5 passed\n";
 
-    // === TEST 6: RESET AFTER ACTIVITY ===
     cout << "\n--- TEST 6: RESET AFTER ACTIVITY ---\n";
     rst.write(true);
     run_instruction(dp, current_time, cycle_time, "reset", 1);
@@ -232,7 +230,6 @@ int sc_main(int argc, char* argv[]) {
     assert(!overrun_error.read());
     cout << "TEST 6 passed\n";
 
-    // === TEST 7: RESET DURING TX LOAD ===
     cout << "\n--- TEST 7: RESET DURING TX LOAD ---\n";
     data_in.write(0xFF);
     load_tx.write(true);
@@ -248,39 +245,33 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_buffer_full.read() == false);
     cout << "TEST 7 passed\n";
 
-    // === TEST 8: RX PARITY ERROR ===
     cout << "\n--- TEST 8: RX PARITY ERROR PREVENTS COMMIT ---\n";
     data_in.write(0);
-    dp.ctrl_parity_enabled.write(true);
-    dp.ctrl_parity_even.write(false);
+    ctrl_parity_enabled.write(true);
+    ctrl_parity_even.write(false);
 
     constexpr uint8_t PARITY_ERR_BYTE = 0x0F;
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "clear RX", 1);
     rx_read.write(false);
-
     rx_in.write(0);
     rx_start.write(true);
     run_instruction(dp, current_time, cycle_time, "rx_start", 1);
     rx_start.write(false);
-
     rx_data.write(true);
     for (int i = 0; i < 8; ++i) {
         rx_in.write((PARITY_ERR_BYTE >> i) & 1);
         run_instruction(dp, current_time, cycle_time, "rx_data", 1);
     }
     rx_data.write(false);
-
     rx_parity.write(true);
     rx_in.write(0);
     run_instruction(dp, current_time, cycle_time, "bad parity", 1);
     rx_parity.write(false);
-
     rx_stop.write(true);
     rx_in.write(1);
     run_instruction(dp, current_time, cycle_time, "rx_stop", 1);
     rx_stop.write(false);
-
     run_instruction(dp, current_time, cycle_time, "commit", 1);
     assert(parity_error.read() && "Parity error expected");
     assert(rx_buffer_empty.read() && "Should not commit corrupted byte");
