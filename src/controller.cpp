@@ -69,7 +69,7 @@ void controller::reset_control_clear_regs() {
     rx_next_state = RX_IDLE;
     
     // baud_counter
-    baud_counter = 0;
+    baud_counter = 1;
     // Reset counters and flags
     tx_bit_counter = 0;
     rx_bit_counter = 0;
