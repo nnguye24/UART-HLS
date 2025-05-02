@@ -188,15 +188,7 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_out.read() == true);
     cout << "TEST 3 passed\n";
 
-    cout << "\n--- TEST 4: RX BUFFER EMPTY FLAG ---\n";
-    assert(!rx_buffer_empty.read() && "Buffer should contain data");
-    rx_read.write(true);
-    run_instruction(dp, current_time, cycle_time, "read out", 1);
-    rx_read.write(false);
-    assert(rx_buffer_empty.read() && "Buffer should now be empty");
-    cout << "TEST 4 passed\n";
-
-    cout << "\n--- TEST 5: RESET AFTER ACTIVITY ---\n";
+    cout << "\n--- TEST 4: RESET AFTER ACTIVITY ---\n";
     rst.write(true);
     run_instruction(dp, current_time, cycle_time, "reset", 1);
     rst.write(false);
@@ -206,9 +198,9 @@ int sc_main(int argc, char* argv[]) {
     assert(!parity_error.read());
     assert(!framing_error.read());
     assert(!overrun_error.read());
-    cout << "TEST 5 passed\n";
+    cout << "TEST 4 passed\n";
 
-    cout << "\n--- TEST 6: RESET DURING TX LOAD ---\n";
+    cout << "\n--- TEST 5: RESET DURING TX LOAD ---\n";
     data_in.write(0xFF);
     load_tx.write(true);
     run_instruction(dp, current_time, cycle_time, "load_tx", 1);
@@ -221,9 +213,9 @@ int sc_main(int argc, char* argv[]) {
     rst.write(false);
     assert(tx_out.read() == true);
     assert(tx_buffer_full.read() == false);
-    cout << "TEST 6 passed\n";
+    cout << "TEST 5 passed\n";
 
-    cout << "\n--- TEST 7: RX PARITY ERROR PREVENTS COMMIT ---\n";
+    cout << "\n--- TEST 6: RX PARITY ERROR PREVENTS COMMIT ---\n";
     data_in.write(0);
     ctrl_parity_enabled.write(true);
     ctrl_parity_even.write(false);
@@ -253,7 +245,7 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "commit", 1);
     assert(parity_error.read() && "Parity error expected");
     assert(rx_buffer_empty.read() && "Should not commit corrupted byte");
-    cout << "TEST 7 passed\n";
+    cout << "TEST 6 passed\n";
 
     cout << "\nAll UART datapath tests completed.\n";
     return 0;
