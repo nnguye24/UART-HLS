@@ -68,6 +68,8 @@ void controller::reset_control_clear_regs() {
     rx_state = RX_IDLE;
     rx_next_state = RX_IDLE;
     
+    // baud_counter
+    baud_counter = 0;
     // Reset counters and flags
     tx_bit_counter = 0;
     rx_bit_counter = 0;
@@ -115,7 +117,10 @@ void controller::read_inputs() {
 }
 
 void controller::controller_fsm() {
+
     // Skip if memory write is active
+if(baud_counter >= in_baud_divisor){
+    baud_counter = 0;
     if(in_mem_we) {
         return;
     }
@@ -280,6 +285,8 @@ void controller::controller_fsm() {
                 break;
         }
     }
+}
+baud_counter++;
 }
 
 void controller::write_outputs() {
