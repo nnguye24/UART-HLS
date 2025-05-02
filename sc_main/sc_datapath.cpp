@@ -185,6 +185,7 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(false);
     cout << "TEST 3 passed\n";
 
+        // === TEST 4: FRAMING ERROR ===
     cout << "\n--- TEST 4: FRAMING ERROR ---\n";
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "clear RX", 1);
@@ -202,10 +203,14 @@ int sc_main(int argc, char* argv[]) {
     rx_parity.write(true);
     run_instruction(dp, current_time, cycle_time, "rx_parity", 1);
     rx_parity.write(false);
+
+    // Write incorrect stop bit (0) and allow it to settle
     rx_in.write(0);
+    run_instruction(dp, current_time, cycle_time, "prep bad stop", 1);  // ensure bad value is latched
     rx_stop.write(true);
     run_instruction(dp, current_time, cycle_time, "bad stop", 1);
     rx_stop.write(false);
+
     run_instruction(dp, current_time, cycle_time, "commit", 1);
     assert(framing_error.read() && "Expected framing error");
     cout << "TEST 4 passed\n";
