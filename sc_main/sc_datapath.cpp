@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include "systemc.h"
+#include <systemc>
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
@@ -124,6 +124,7 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(true);
     run_instruction(dp, current_time, cycle_time, "tx_stop", 1);
     tx_stop.write(false);
+    assert(tx_out.read() == true);
     cout << "TEST 1 passed\n";
 
     cout << "\n--- TEST 2: RECEIVE 0x3C ---\n";
@@ -148,6 +149,7 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "rx_stop", 1);
     rx_stop.write(false);
     run_instruction(dp, current_time, cycle_time, "commit", 1);
+    assert(!rx_buffer_empty.read());
     cout << "TEST 2 passed\n";
 
     cout << "\n--- TEST 3: CONTINUOUS TX 0xA5 and 0x5A ---\n";
@@ -183,6 +185,7 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(true);
     run_instruction(dp, current_time, cycle_time, "tx2 stop", 1);
     tx_stop.write(false);
+    assert(tx_out.read() == true);
     cout << "TEST 3 passed\n";
 
     cout << "\n--- TEST 4: RX BUFFER EMPTY FLAG ---\n";
