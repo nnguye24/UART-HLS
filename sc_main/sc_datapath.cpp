@@ -84,7 +84,6 @@ int sc_main(int argc, char* argv[]) {
     dp.ctrl_data_bits(ctrl_data_bits);
     dp.ctrl_stop_bits(ctrl_stop_bits);
 
-    // Initialize signals
     rst.write(true);
     start.write(false);
     load_tx.write(false);
@@ -121,9 +120,9 @@ int sc_main(int argc, char* argv[]) {
     std::cout << "Test 1 passed: Reset state (flags only)." << std::endl;
 
     std::cout << "\n=== TEST 2: Baud Rate Register Combination ===" << std::endl;
-    data_in.write("00000001"); addr.write(32); // Low byte
+    data_in.write("00000001"); addr.write(32);
     run_instruction(dp, current_time, cycle_time, "Write BAUD_LOW", 1);
-    data_in.write("00000010"); addr.write(33); // High byte
+    data_in.write("00000010"); addr.write(33);
     run_instruction(dp, current_time, cycle_time, "Write BAUD_HIGH", 1);
     std::cout << "[DEBUG] Baud registers written (no direct output to check)" << std::endl;
     std::cout << "Test 2 passed: Baud rate written." << std::endl;
@@ -148,24 +147,24 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_out.read() == 0);
     std::cout << "Test 4 passed: TX load and start." << std::endl;
 
-    std::cout << "\n=== TEST 5: Transmit Data and Stop Bits ===" << std::endl;
+    std::cout << "\n=== TEST 5: Transmit Full Byte and Stop Bit ===" << std::endl;
     tx_data.write(true);
-    run_instruction(dp, current_time, cycle_time, "TX Data (signal set)", 1);
-    bool tx_bit_val = tx_out.read();
+    for (int i = 0; i < 8; ++i) {
+        run_instruction(dp, current_time, cycle_time, "TX Data Bit " + std::to_string(i), 1);
+    }
     tx_data.write(false);
-    std::cout << "[DEBUG] tx_out after TX Data: " << tx_bit_val << std::endl;
 
     tx_stop.write(true);
-    run_instruction(dp, current_time, cycle_time, "TX Stop (signal set)", 2);
+    run_instruction(dp, current_time, cycle_time, "TX Stop (after 8 bits)", 2);
     tx_stop.write(false);
-    bool tx_stop_val = tx_out.read();
-    std::cout << "[DEBUG] tx_out after TX Stop: " << tx_stop_val << std::endl;
 
-    assert(tx_stop_val == 1);
-    std::cout << "Test 5 passed: TX data/stop bits." << std::endl;
+    bool final_tx_out = tx_out.read();
+    std::cout << "[DEBUG] tx_out after full TX and stop: " << final_tx_out << std::endl;
+    assert(final_tx_out == 1);
+    std::cout << "Test 5 passed: Full TX + stop bit." << std::endl;
 
     std::cout << "\n=== TEST 6: RX Start Bit Error Detection ===" << std::endl;
-    rx_in.write(1); // Should be 0
+    rx_in.write(1);
     rx_start.write(true);
     run_instruction(dp, current_time, cycle_time, "RX Start Bit", 1);
     rx_start.write(false);
