@@ -151,20 +151,16 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_out.read() == 0);
     std::cout << "Test 4 passed: TX load and start." << std::endl;
 
-    std::cout << "\n=== TEST 5: RX Start Bit Error Detection ===" << std::endl;
-    std::cout << "This test verifies framing error when RX start bit is incorrect." << std::endl;
-    rx_in.write(1);
-    std::cout << "Setting rx_in = " << rx_in.read() << " and rx_start = 1" << std::endl;
-    rx_start.write(true);
-    run_instruction(dp, current_time, cycle_time, "RX Start Bit Cycle 1", 1);
-    std::cout << "Holding rx_start = 1" << std::endl;
-    run_instruction(dp, current_time, cycle_time, "RX Start Bit Cycle 2", 1);
-    rx_start.write(false);
-    std::cout << "Waiting to commit framing error" << std::endl;
-    run_instruction(dp, current_time, cycle_time, "Post RX Wait", 1);
+    std::cout << "\n=== TEST 5: RX Stop Bit Error Detection ===" << std::endl;
+    std::cout << "This test verifies framing error when RX stop bit is incorrect." << std::endl;
+    rx_in.write(0);  // stop bit should be 1
+    rx_stop.write(true);
+    run_instruction(dp, current_time, cycle_time, "RX Stop Bit Error", 1);
+    rx_stop.write(false);
+    run_instruction(dp, current_time, cycle_time, "Post RX Stop Wait", 1);
     std::cout << "rx_in = " << rx_in.read() << ", framing_error = " << framing_error.read() << std::endl;
     assert(framing_error.read() == true);
-    std::cout << "Test 5 passed: RX framing error detected." << std::endl;
+    std::cout << "Test 5 passed: RX stop bit framing error detected." << std::endl;
 
     std::cout << "\n=== All Tests Completed Successfully ===" << std::endl;
     return 0;
