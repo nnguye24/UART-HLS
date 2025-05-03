@@ -150,12 +150,16 @@ int sc_main(int argc, char* argv[]) {
 
     std::cout << "\n=== TEST 5: Transmit Data and Stop Bits ===" << std::endl;
     tx_data.write(true);
+    std::cout << "[DEBUG] tx_data = " << tx_data.read() << ", tx_out = " << tx_out.read() << std::endl;
     run_instruction(dp, current_time, cycle_time, "TX Data", 1);
+    std::cout << "[DEBUG] tx_out after TX Data: " << tx_out.read() << std::endl;
     bool tx_bit_val = tx_out.read();
     tx_data.write(false);
 
     tx_stop.write(true);
+    std::cout << "[DEBUG] tx_stop = " << tx_stop.read() << ", tx_out before stop: " << tx_out.read() << std::endl;
     run_instruction(dp, current_time, cycle_time, "TX Stop", 2);  // Extended to 2 cycles
+    std::cout << "[DEBUG] tx_out after TX Stop: " << tx_out.read() << std::endl;
     tx_stop.write(false);
 
     std::cout << "[DEBUG] tx_out during data: " << tx_bit_val
