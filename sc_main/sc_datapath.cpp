@@ -153,9 +153,11 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "TX Data", 1);
     bool tx_bit_val = tx_out.read();
     tx_data.write(false);
+
     tx_stop.write(true);
-    run_instruction(dp, current_time, cycle_time, "TX Stop", 1);
+    run_instruction(dp, current_time, cycle_time, "TX Stop", 2);  // Extended to 2 cycles
     tx_stop.write(false);
+
     std::cout << "[DEBUG] tx_out during data: " << tx_bit_val
               << ", after stop: " << tx_out.read() << std::endl;
     assert(tx_out.read() == 1);
