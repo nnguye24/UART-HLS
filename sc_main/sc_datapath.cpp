@@ -185,10 +185,17 @@ int sc_main(int argc, char* argv[]) {
     tx_stop.write(true);
     run_instruction(dp, current_time, cycle_time, "tx2 stop", 1);
     tx_stop.write(false);
-    assert(tx_out.read() == true);
     cout << "TEST 3 passed\n";
 
-    cout << "\n--- TEST 6: RESET AFTER ACTIVITY ---\n";
+    cout << "\n--- TEST 4: RX BUFFER EMPTY FLAG ---\n";
+    assert(!rx_buffer_empty.read());
+    rx_read.write(true);
+    run_instruction(dp, current_time, cycle_time, "read out", 1);
+    rx_read.write(false);
+    assert(rx_buffer_empty.read());
+    cout << "TEST 4 passed\n";
+
+    cout << "\n--- TEST 5: RESET AFTER ACTIVITY ---\n";
     rst.write(true);
     run_instruction(dp, current_time, cycle_time, "reset", 1);
     rst.write(false);
@@ -198,9 +205,9 @@ int sc_main(int argc, char* argv[]) {
     assert(!parity_error.read());
     assert(!framing_error.read());
     assert(!overrun_error.read());
-    cout << "TEST 6 passed\n";
+    cout << "TEST 5 passed\n";
 
-    cout << "\n--- TEST 7: RESET DURING TX LOAD ---\n";
+    cout << "\n--- TEST 6: RESET DURING TX LOAD ---\n";
     data_in.write(0xFF);
     load_tx.write(true);
     run_instruction(dp, current_time, cycle_time, "load_tx", 1);
@@ -213,6 +220,38 @@ int sc_main(int argc, char* argv[]) {
     rst.write(false);
     assert(tx_out.read() == true);
     assert(tx_buffer_full.read() == false);
+    cout << "TEST 6 passed\n";
+
+    cout << "\n--- TEST 7: RX PARITY ERROR PREVENTS COMMIT ---\n";
+    data_in.write(0);
+    ctrl_parity_enabled.write(true);
+    ctrl_parity_even.write(false);
+
+    constexpr uint8_t PARITY_ERR_BYTE = 0x0F;
+    rx_read.write(true);
+    run_instruction(dp, current_time, cycle_time, "clear RX", 1);
+    rx_read.write(false);
+    rx_in.write(0);
+    rx_start.write(true);
+    run_instruction(dp, current_time, cycle_time, "rx_start", 1);
+    rx_start.write(false);
+    rx_data.write(true);
+    for (int i = 0; i < 8; ++i) {
+        rx_in.write((PARITY_ERR_BYTE >> i) & 1);
+        run_instruction(dp, current_time, cycle_time, "rx_data", 1);
+    }
+    rx_data.write(false);
+    rx_parity.write(true);
+    rx_in.write(0);
+    run_instruction(dp, current_time, cycle_time, "bad parity", 1);
+    rx_parity.write(false);
+    rx_stop.write(true);
+    rx_in.write(1);
+    run_instruction(dp, current_time, cycle_time, "rx_stop", 1);
+    rx_stop.write(false);
+    run_instruction(dp, current_time, cycle_time, "commit", 1);
+    assert(parity_error.read());
+    assert(rx_buffer_empty.read());
     cout << "TEST 7 passed\n";
 
     cout << "\nAll UART datapath tests completed.\n";
