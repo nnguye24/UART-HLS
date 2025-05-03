@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include <systemc>
+#include "systemc.h"
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
