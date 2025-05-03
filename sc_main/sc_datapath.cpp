@@ -151,16 +151,22 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_out.read() == 0);
     std::cout << "Test 4 passed: TX load and start." << std::endl;
 
-    std::cout << "\n=== TEST 5: RX Buffer Read ===" << std::endl;
-    std::cout << "This test simulates a host reading from the RX buffer." << std::endl;
-    rx_buffer_empty.write(false);
-    data_in.write("11001100");  // value from memory
-    addr.write(16);  // RX_BUFFER_START
-    rx_read.write(true);
-    run_instruction(dp, current_time, cycle_time, "RX Read", 1);
-    rx_read.write(false);
-    std::cout << "Value output from datapath (data_out): " << data_out.read() << std::endl;
-    std::cout << "Test 5 passed: RX buffer read successful." << std::endl;
+    std::cout << "\n=== TEST 5: Error Flags Reset ===" << std::endl;
+    std::cout << "This test manually sets error flags and clears them with error_handle." << std::endl;
+    parity_error.write(true);
+    framing_error.write(true);
+    overrun_error.write(true);
+    error_handle.write(true);
+    run_instruction(dp, current_time, cycle_time, "Error Handle Set", 1);
+    error_handle.write(false);
+    run_instruction(dp, current_time, cycle_time, "Error Handle Cleared", 1);
+    std::cout << "parity_error = " << parity_error.read()
+              << ", framing_error = " << framing_error.read()
+              << ", overrun_error = " << overrun_error.read() << std::endl;
+    assert(parity_error.read() == false);
+    assert(framing_error.read() == false);
+    assert(overrun_error.read() == false);
+    std::cout << "Test 5 passed: Error flags cleared successfully." << std::endl;
 
     std::cout << "\n=== All Tests Completed Successfully ===" << std::endl;
     return 0;
