@@ -157,6 +157,7 @@ int sc_main(int argc, char* argv[]) {
     rx_start.write(true);
     run_instruction(dp, current_time, cycle_time, "RX Start Bit", 1);
     rx_start.write(false);
+    run_instruction(dp, current_time, cycle_time, "Wait for framing_error", 1);
     std::cout << "framing_error = " << framing_error.read() << std::endl;
     assert(framing_error.read() == true);
     std::cout << "Test 5 passed: RX framing error detected." << std::endl;
