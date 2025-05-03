@@ -121,11 +121,19 @@ int sc_main(int argc, char* argv[]) {
     std::cout << "Test 1 passed: Reset state (flags only)." << std::endl;
 
     std::cout << "\n=== TEST 2: Line Control Register Decoding (8N1) ===" << std::endl;
-    addr.write(34);                      // LINE_CONTROL_REG address
-    data_in.write("00000011");          // LCR = 0x03 → 8 data bits, 1 stop bit, no parity
-    start.write(false);
     mem_we.write(false);
-    run_instruction(dp, current_time, cycle_time, "LCR decode cycle", 4); // ensures read_inputs + compute
+    start.write(false);
+
+    // Simulate memory behavior by watching addr and returning data at addr 34
+    for (int i = 0; i < 4; ++i) {
+        sc_start(2 * cycle_time);
+        current_time += 2 * cycle_time;
+
+        if (addr.read().to_uint() == 34) {
+            data_in.write("00000011");  // LCR: 8 data bits, 1 stop bit, no parity
+        }
+    }
+
     std::cout << "[DEBUG] ctrl_data_bits: " << ctrl_data_bits.read()
               << ", ctrl_stop_bits: " << ctrl_stop_bits.read()
               << ", ctrl_parity_enabled: " << ctrl_parity_enabled.read() << std::endl;
