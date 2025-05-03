@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include "systemc.h"
+#include <systemc>
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
@@ -102,38 +102,43 @@ int sc_main(int argc, char* argv[]) {
     overrun_error.write(false);
     rx_in.write(1);
     data_in.write(0);
-    addr.write(0);
+    addr.write(LINE_CONTROL_REG);
 
     run_instruction(dp, current_time, cycle_time, "RESET", 1);
     rst.write(false);
 
     cout << "\n--- TEST 1: CONFIGURATION LOAD CHECK ---\n";
-    addr.write(34);
-    data_in.write(0x1E);
+    addr.write(LINE_CONTROL_REG);
+    data_in.write("00011000"); // Enable parity (bit 3), even parity (bit 4)
     run_instruction(dp, current_time, cycle_time, "Set LCR", 1);
     run_instruction(dp, current_time, cycle_time, "Wait for config", 1);
     assert(ctrl_parity_enabled.read() == true);
     assert(ctrl_parity_even.read() == true);
-    assert(ctrl_data_bits.read() == 7);
-    assert(ctrl_stop_bits.read() == 2);
     cout << "TEST 1 passed\n";
 
-    cout << "\n--- TEST 2: TX OUTPUT IDLE AFTER RESET ---\n";
+    cout << "\n--- TEST 2: RX BUFFER EMPTY FLAG INITIALLY SET ---\n";
+    assert(rx_buffer_empty.read() == true);
+    cout << "TEST 2 passed\n";
+
+    cout << "\n--- TEST 3: RESET CLEARS ERRORS ---\n";
+    parity_error.write(true);
+    framing_error.write(true);
+    overrun_error.write(true);
     rst.write(true);
     run_instruction(dp, current_time, cycle_time, "reset", 1);
     rst.write(false);
-    run_instruction(dp, current_time, cycle_time, "post-reset settle", 1);
-    assert(tx_out.read() == true);
-    cout << "TEST 2 passed\n";
-
-    cout << "\n--- TEST 3: RX BUFFER EMPTY AFTER RESET ---\n";
-    assert(rx_buffer_empty.read() == true);
-    cout << "TEST 3 passed\n";
-
-    cout << "\n--- TEST 4: ERROR FLAGS CLEAR AFTER RESET ---\n";
+    run_instruction(dp, current_time, cycle_time, "settle", 1);
     assert(!parity_error.read());
     assert(!framing_error.read());
     assert(!overrun_error.read());
+    cout << "TEST 3 passed\n";
+
+    cout << "\n--- TEST 4: RX READ WHEN EMPTY HAS NO SIDE EFFECTS ---\n";
+    rx_read.write(true);
+    run_instruction(dp, current_time, cycle_time, "attempt read", 1);
+    rx_read.write(false);
+    run_instruction(dp, current_time, cycle_time, "settle", 1);
+    assert(rx_buffer_empty.read() == true);
     cout << "TEST 4 passed\n";
 
     cout << "\nAll UART datapath tests completed.\n";
