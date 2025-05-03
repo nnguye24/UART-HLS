@@ -153,15 +153,13 @@ int sc_main(int argc, char* argv[]) {
 
     std::cout << "\n=== TEST 5: RX Buffer Read ===" << std::endl;
     std::cout << "This test simulates a host reading from the RX buffer." << std::endl;
-    // Manually set state assuming there is a byte in RX buffer at index 0
     rx_buffer_empty.write(false);
-    rx_buf_tail = 0;  // hypothetical index where byte is stored
-    data_in.write("11001100");  // simulate memory returning this byte
-    addr.write(16);  // RX_BUFFER_START + rx_buf_tail
+    data_in.write("11001100");  // value from memory
+    addr.write(16);  // RX_BUFFER_START
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "RX Read", 1);
     rx_read.write(false);
-    std::cout << "Read byte from RX buffer: " << data_in.read() << std::endl;
+    std::cout << "Read byte from RX buffer (via data_in): " << data_in.read() << std::endl;
     std::cout << "Test 5 passed: RX buffer read successful." << std::endl;
 
     std::cout << "\n=== All Tests Completed Successfully ===" << std::endl;
