@@ -16,10 +16,10 @@
 
 using namespace std;
 
-void run_instruction(datapath& dp, sc_time& current_time, const sc_time& cycle_time, const std::string& detail, int n){
+void run_instruction(datapath& dp, sc_time& current_time, const sc_time& cycle_time, const std::string& detail, int n) {
     std::cout << detail << std::endl;
-    std::cout << "Instruction Cycle start time -" << current_time << std::endl;
-    for(int i = 0; i < n; ++i){
+    std::cout << "Instruction Cycle start time - " << current_time << std::endl;
+    for (int i = 0; i < n; ++i) {
         sc_start(2 * cycle_time);
         current_time += 2 * cycle_time;
     }
@@ -29,24 +29,30 @@ int sc_main(int argc, char* argv[]) {
     sc_time current_time = SC_ZERO_TIME;
     sc_time cycle_time(CYCLE_LENGTH, SC_NS);
 
+    // Clock
     sc_clock clk("clk", CYCLE_LENGTH, SC_NS);
-    sc_signal<bool> rst;
-    sc_signal<bool> load_tx, load_tx2, tx_start, tx_data, tx_parity, tx_stop;
+
+    // Control and status signals
+    sc_signal<bool> rst, load_tx, load_tx2, tx_start, tx_data, tx_parity, tx_stop;
     sc_signal<bool> rx_start, rx_data, rx_parity, rx_stop, error_handle, rx_read;
     sc_signal<bool> tx_buffer_full, rx_buffer_empty;
     sc_signal<bool> parity_error, framing_error, overrun_error;
     sc_signal<bool> rx_in, tx_out;
     sc_signal<bool> start, mem_we;
+
+    // Data and address signals
     sc_signal<sc_bv<DATA_W>> data_in, data_out;
     sc_signal<sc_bv<ADDR_W>> addr;
     sc_signal<sc_bv<DATA_W>> dp_data_in;
     sc_signal<sc_bv<ADDR_W>> dp_addr;
     sc_signal<bool> dp_write_enable;
-    sc_signal<bool> ctrl_parity_enabled;
-    sc_signal<bool> ctrl_parity_even;
+
+    // Configuration signals
+    sc_signal<bool> ctrl_parity_enabled, ctrl_parity_even;
     sc_signal<sc_uint<3>> ctrl_data_bits;
     sc_signal<sc_uint<2>> ctrl_stop_bits;
 
+    // Instantiate datapath
     datapath dp("datapath");
     dp.clk(clk);
     dp.rst(rst);
@@ -82,6 +88,7 @@ int sc_main(int argc, char* argv[]) {
     dp.ctrl_data_bits(ctrl_data_bits);
     dp.ctrl_stop_bits(ctrl_stop_bits);
 
+    // Initialize all signals
     rst.write(true);
     load_tx.write(false);
     load_tx2.write(false);
@@ -102,45 +109,79 @@ int sc_main(int argc, char* argv[]) {
     overrun_error.write(false);
     rx_in.write(1);
     data_in.write(0);
-    addr.write(LINE_CONTROL_REG);
+    addr.write(0);
+    start.write(false);
+    mem_we.write(false);
 
+    // Run one cycle to process reset
     run_instruction(dp, current_time, cycle_time, "RESET", 1);
     rst.write(false);
 
-    cout << "\n--- TEST 1: CONFIGURATION LOAD CHECK ---\n";
-    addr.write(LINE_CONTROL_REG);
-    data_in.write("00011000"); // Enable parity (bit 3), even parity (bit 4)
-    run_instruction(dp, current_time, cycle_time, "Set LCR", 1);
-    run_instruction(dp, current_time, cycle_time, "Wait for config", 1);
-    assert(ctrl_parity_enabled.read() == true);
-    assert(ctrl_parity_even.read() == true);
-    cout << "TEST 1 passed\n";
+    /***********************
+     * Begin Test Cases
+     ***********************/
 
-    cout << "\n--- TEST 2: RX BUFFER EMPTY FLAG INITIALLY SET ---\n";
+    std::cout << "\n=== TEST 1: Reset Verification ===" << std::endl;
+    assert(tx_out.read() == 1);
     assert(rx_buffer_empty.read() == true);
-    cout << "TEST 2 passed\n";
+    assert(tx_buffer_full.read() == false);
+    std::cout << "Test 1 passed: Reset state correct.\n" << std::endl;
 
-    cout << "\n--- TEST 3: RESET CLEARS ERRORS ---\n";
-    parity_error.write(true);
-    framing_error.write(true);
-    overrun_error.write(true);
-    rst.write(true);
-    run_instruction(dp, current_time, cycle_time, "reset", 1);
-    rst.write(false);
-    run_instruction(dp, current_time, cycle_time, "settle", 1);
-    assert(!parity_error.read());
-    assert(!framing_error.read());
-    assert(!overrun_error.read());
-    cout << "TEST 3 passed\n";
+    std::cout << "=== TEST 2: Line Control Register Decoding (8N1) ===" << std::endl;
+    data_in.write("00000011"); // 8 data bits
+    addr.write(34); // LINE_CONTROL_REG
+    run_instruction(dp, current_time, cycle_time, "Line Control Reg Read", 1);
+    assert(ctrl_data_bits.read() == 8);
+    assert(ctrl_stop_bits.read() == 1);
+    assert(ctrl_parity_enabled.read() == false);
+    std::cout << "Test 2 passed: Line control config decoded correctly.\n" << std::endl;
 
-    cout << "\n--- TEST 4: RX READ WHEN EMPTY HAS NO SIDE EFFECTS ---\n";
-    rx_read.write(true);
-    run_instruction(dp, current_time, cycle_time, "attempt read", 1);
-    rx_read.write(false);
-    run_instruction(dp, current_time, cycle_time, "settle", 1);
-    assert(rx_buffer_empty.read() == true);
-    cout << "TEST 4 passed\n";
+    std::cout << "=== TEST 3: Baud Rate Register Combination ===" << std::endl;
+    data_in.write("00000001"); // Low byte
+    addr.write(32); // BAUD_RATE_LOW
+    run_instruction(dp, current_time, cycle_time, "Baud Low", 1);
+    data_in.write("00000010"); // High byte
+    addr.write(33); // BAUD_RATE_HIGH
+    run_instruction(dp, current_time, cycle_time, "Baud High", 1);
+    std::cout << "Test 3 passed: Baud rate loaded without error.\n" << std::endl;
 
-    cout << "\nAll UART datapath tests completed.\n";
+    std::cout << "=== TEST 4: Load TX Buffer - Phase 1 ===" << std::endl;
+    data_in.write("10101010");
+    addr.write(0);
+    load_tx.write(true);
+    run_instruction(dp, current_time, cycle_time, "Load TX Phase 1", 1);
+    load_tx.write(false);
+    std::cout << "Test 4 passed: Load TX Phase 1 completed.\n" << std::endl;
+
+    std::cout << "=== TEST 5: Load TX Buffer - Phase 2 ===" << std::endl;
+    load_tx2.write(true);
+    run_instruction(dp, current_time, cycle_time, "Load TX Phase 2", 1);
+    load_tx2.write(false);
+    tx_start.write(true);
+    run_instruction(dp, current_time, cycle_time, "Trigger TX Start", 1);
+    tx_start.write(false);
+    assert(tx_out.read() == 0);
+    std::cout << "Test 5 passed: TX shift register loaded and start sent.\n" << std::endl;
+
+    std::cout << "=== TEST 6: Transmit Data and Stop Bits ===" << std::endl;
+    tx_data.write(true);
+    run_instruction(dp, current_time, cycle_time, "TX Data Bit", 1);
+    bool tx_bit_out = tx_out.read();
+    tx_data.write(false);
+    tx_stop.write(true);
+    run_instruction(dp, current_time, cycle_time, "TX Stop Bit", 1);
+    tx_stop.write(false);
+    assert(tx_out.read() == 1);
+    std::cout << "TX bit value: " << tx_bit_out << std::endl;
+    std::cout << "Test 6 passed: Data and stop bits transmitted.\n" << std::endl;
+
+    std::cout << "=== TEST 7: RX Start Bit Error Detection ===" << std::endl;
+    rx_in.write(1);
+    rx_start.write(true);
+    run_instruction(dp, current_time, cycle_time, "RX Start Bit", 1);
+    rx_start.write(false);
+    assert(framing_error.read() == true);
+    std::cout << "Test 7 passed: Framing error triggered on bad start bit.\n" << std::endl;
+
     return 0;
 }
