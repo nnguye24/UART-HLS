@@ -32,7 +32,6 @@ int sc_main(int argc, char* argv[]) {
 
     sc_clock clk("clk", CYCLE_LENGTH, SC_NS);
 
-    // Control and status signals
     sc_signal<bool> rst, load_tx, load_tx2, tx_start, tx_data, tx_parity, tx_stop;
     sc_signal<bool> rx_start, rx_data, rx_parity, rx_stop, error_handle, rx_read;
     sc_signal<bool> tx_buffer_full, rx_buffer_empty;
@@ -87,6 +86,7 @@ int sc_main(int argc, char* argv[]) {
 
     // Initialize signals
     rst.write(true);
+    start.write(false);
     load_tx.write(false);
     load_tx2.write(false);
     tx_start.write(false);
@@ -107,12 +107,13 @@ int sc_main(int argc, char* argv[]) {
     rx_in.write(1);
     data_in.write(0);
     addr.write(0);
-    start.write(false);
     mem_we.write(false);
 
     std::cout << "\n=== TEST 1: Reset Verification ===" << std::endl;
+    start.write(true);  // Trigger reset logic
     run_instruction(dp, current_time, cycle_time, "RESET", 2);
-    rst.write(false);
+    start.write(false); // Turn off reset
+    rst.write(false);   // Release SystemC reset after datapath reset
     std::cout << "[DEBUG] tx_out: " << tx_out.read()
               << ", rx_buffer_empty: " << rx_buffer_empty.read()
               << ", tx_buffer_full: " << tx_buffer_full.read() << std::endl;
