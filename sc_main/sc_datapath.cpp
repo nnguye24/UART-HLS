@@ -150,21 +150,18 @@ int sc_main(int argc, char* argv[]) {
 
     std::cout << "\n=== TEST 5: Transmit Data and Stop Bits ===" << std::endl;
     tx_data.write(true);
-    std::cout << "[DEBUG] tx_data = " << tx_data.read() << ", tx_out = " << tx_out.read() << std::endl;
-    run_instruction(dp, current_time, cycle_time, "TX Data", 1);
-    std::cout << "[DEBUG] tx_out after TX Data: " << tx_out.read() << std::endl;
+    run_instruction(dp, current_time, cycle_time, "TX Data (signal set)", 1);
     bool tx_bit_val = tx_out.read();
     tx_data.write(false);
+    std::cout << "[DEBUG] tx_out after TX Data: " << tx_bit_val << std::endl;
 
     tx_stop.write(true);
-    std::cout << "[DEBUG] tx_stop = " << tx_stop.read() << ", tx_out before stop: " << tx_out.read() << std::endl;
-    run_instruction(dp, current_time, cycle_time, "TX Stop", 2);  // Extended to 2 cycles
-    std::cout << "[DEBUG] tx_out after TX Stop: " << tx_out.read() << std::endl;
+    run_instruction(dp, current_time, cycle_time, "TX Stop (signal set)", 2);
     tx_stop.write(false);
+    bool tx_stop_val = tx_out.read();
+    std::cout << "[DEBUG] tx_out after TX Stop: " << tx_stop_val << std::endl;
 
-    std::cout << "[DEBUG] tx_out during data: " << tx_bit_val
-              << ", after stop: " << tx_out.read() << std::endl;
-    assert(tx_out.read() == 1);
+    assert(tx_stop_val == 1);
     std::cout << "Test 5 passed: TX data/stop bits." << std::endl;
 
     std::cout << "\n=== TEST 6: RX Start Bit Error Detection ===" << std::endl;
