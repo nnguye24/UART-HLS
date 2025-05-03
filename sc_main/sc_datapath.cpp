@@ -114,53 +114,58 @@ int sc_main(int argc, char* argv[]) {
     run_instruction(dp, current_time, cycle_time, "RESET", 2);
     start.write(false);
     rst.write(false);
-    std::cout << "rx_buffer_empty = " << rx_buffer_empty.read()
+    std::cout << "After reset: rx_buffer_empty = " << rx_buffer_empty.read()
               << ", tx_buffer_full = " << tx_buffer_full.read() << std::endl;
     assert(rx_buffer_empty.read() == true);
     assert(tx_buffer_full.read() == false);
     std::cout << "Test 1 passed: Reset state (flags only)." << std::endl;
 
     std::cout << "\n=== TEST 2: Baud Rate Register Combination ===" << std::endl;
-    std::cout << "This test simulates writes to the baud rate registers." << std::endl;
+    std::cout << "This test simulates writes to the baud rate registers and ensures no crash." << std::endl;
     data_in.write("00000001"); addr.write(32);
     run_instruction(dp, current_time, cycle_time, "Write BAUD_LOW", 1);
     data_in.write("00000010"); addr.write(33);
     run_instruction(dp, current_time, cycle_time, "Write BAUD_HIGH", 1);
-    std::cout << "Baud registers written successfully." << std::endl;
+    std::cout << "Baud registers written with values 0x01 and 0x02." << std::endl;
     std::cout << "Test 2 passed: Baud rate written." << std::endl;
 
     std::cout << "\n=== TEST 3: Load TX Buffer - Phase 1 ===" << std::endl;
-    std::cout << "This test loads a byte into the TX buffer (step 1)." << std::endl;
+    std::cout << "This test initiates loading a byte into the TX buffer." << std::endl;
     data_in.write("10101010");
     addr.write(0);
     load_tx.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Phase 1", 1);
     load_tx.write(false);
-    std::cout << "TX buffer loaded with byte 0xAA (phase 1 complete)." << std::endl;
+    std::cout << "TX buffer load initiated with byte 0xAA." << std::endl;
     std::cout << "Test 3 passed: TX buffer phase 1." << std::endl;
 
     std::cout << "\n=== TEST 4: Load TX Buffer - Phase 2 ===" << std::endl;
-    std::cout << "This test completes TX load and starts transmission." << std::endl;
+    std::cout << "This test completes the TX buffer load and starts transmission." << std::endl;
     load_tx2.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Phase 2", 1);
     load_tx2.write(false);
     tx_start.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Start", 1);
     tx_start.write(false);
-    std::cout << "tx_out (after start bit sent) = " << tx_out.read() << std::endl;
+    std::cout << "tx_out after start signal = " << tx_out.read() << " (should be 0 for start bit)" << std::endl;
     assert(tx_out.read() == 0);
     std::cout << "Test 4 passed: TX load and start." << std::endl;
 
     std::cout << "\n=== TEST 5: Error Flags Reset ===" << std::endl;
-    std::cout << "This test manually sets error flags and clears them with error_handle." << std::endl;
+    std::cout << "This test sets all three error flags and uses error_handle to reset them." << std::endl;
     parity_error.write(true);
     framing_error.write(true);
     overrun_error.write(true);
+    std::cout << "Initial error flag values: parity_error = " << parity_error.read()
+              << ", framing_error = " << framing_error.read()
+              << ", overrun_error = " << overrun_error.read() << std::endl;
+
     error_handle.write(true);
-    run_instruction(dp, current_time, cycle_time, "Error Handle Set", 1);
+    run_instruction(dp, current_time, cycle_time, "Trigger Error Handle", 1);
     error_handle.write(false);
-    run_instruction(dp, current_time, cycle_time, "Error Handle Cleared", 1);
-    std::cout << "parity_error = " << parity_error.read()
+    run_instruction(dp, current_time, cycle_time, "Finish Error Clear", 1);
+
+    std::cout << "Error flags after clearing: parity_error = " << parity_error.read()
               << ", framing_error = " << framing_error.read()
               << ", overrun_error = " << overrun_error.read() << std::endl;
     assert(parity_error.read() == false);
