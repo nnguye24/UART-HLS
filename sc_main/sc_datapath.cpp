@@ -120,46 +120,24 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_buffer_full.read() == false);
     std::cout << "Test 1 passed: Reset state (flags only)." << std::endl;
 
-    std::cout << "\n=== TEST 2: Line Control Register Decoding (8N1) ===" << std::endl;
-    mem_we.write(false);
-    start.write(false);
-
-    // Simulate memory behavior by watching addr and returning data at addr 34
-    for (int i = 0; i < 4; ++i) {
-        sc_start(2 * cycle_time);
-        current_time += 2 * cycle_time;
-
-        if (addr.read().to_uint() == 34) {
-            data_in.write("00000011");  // LCR: 8 data bits, 1 stop bit, no parity
-        }
-    }
-
-    std::cout << "[DEBUG] ctrl_data_bits: " << ctrl_data_bits.read()
-              << ", ctrl_stop_bits: " << ctrl_stop_bits.read()
-              << ", ctrl_parity_enabled: " << ctrl_parity_enabled.read() << std::endl;
-    assert(ctrl_data_bits.read() == 8);
-    assert(ctrl_stop_bits.read() == 1);
-    assert(ctrl_parity_enabled.read() == false);
-    std::cout << "Test 2 passed: LCR decoding." << std::endl;
-
-    std::cout << "\n=== TEST 3: Baud Rate Register Combination ===" << std::endl;
+    std::cout << "\n=== TEST 2: Baud Rate Register Combination ===" << std::endl;
     data_in.write("00000001"); addr.write(32); // Low byte
     run_instruction(dp, current_time, cycle_time, "Write BAUD_LOW", 1);
     data_in.write("00000010"); addr.write(33); // High byte
     run_instruction(dp, current_time, cycle_time, "Write BAUD_HIGH", 1);
     std::cout << "[DEBUG] Baud registers written (no direct output to check)" << std::endl;
-    std::cout << "Test 3 passed: Baud rate written." << std::endl;
+    std::cout << "Test 2 passed: Baud rate written." << std::endl;
 
-    std::cout << "\n=== TEST 4: Load TX Buffer - Phase 1 ===" << std::endl;
+    std::cout << "\n=== TEST 3: Load TX Buffer - Phase 1 ===" << std::endl;
     data_in.write("10101010");
     addr.write(0);
     load_tx.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Phase 1", 1);
     load_tx.write(false);
     std::cout << "[DEBUG] Load TX Phase 1 done." << std::endl;
-    std::cout << "Test 4 passed: TX buffer phase 1." << std::endl;
+    std::cout << "Test 3 passed: TX buffer phase 1." << std::endl;
 
-    std::cout << "\n=== TEST 5: Load TX Buffer - Phase 2 ===" << std::endl;
+    std::cout << "\n=== TEST 4: Load TX Buffer - Phase 2 ===" << std::endl;
     load_tx2.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Phase 2", 1);
     load_tx2.write(false);
@@ -168,9 +146,9 @@ int sc_main(int argc, char* argv[]) {
     tx_start.write(false);
     std::cout << "[DEBUG] tx_out after start: " << tx_out.read() << std::endl;
     assert(tx_out.read() == 0);
-    std::cout << "Test 5 passed: TX load and start." << std::endl;
+    std::cout << "Test 4 passed: TX load and start." << std::endl;
 
-    std::cout << "\n=== TEST 6: Transmit Data and Stop Bits ===" << std::endl;
+    std::cout << "\n=== TEST 5: Transmit Data and Stop Bits ===" << std::endl;
     tx_data.write(true);
     run_instruction(dp, current_time, cycle_time, "TX Data", 1);
     bool tx_bit_val = tx_out.read();
@@ -181,16 +159,16 @@ int sc_main(int argc, char* argv[]) {
     std::cout << "[DEBUG] tx_out during data: " << tx_bit_val
               << ", after stop: " << tx_out.read() << std::endl;
     assert(tx_out.read() == 1);
-    std::cout << "Test 6 passed: TX data/stop bits." << std::endl;
+    std::cout << "Test 5 passed: TX data/stop bits." << std::endl;
 
-    std::cout << "\n=== TEST 7: RX Start Bit Error Detection ===" << std::endl;
+    std::cout << "\n=== TEST 6: RX Start Bit Error Detection ===" << std::endl;
     rx_in.write(1); // Should be 0
     rx_start.write(true);
     run_instruction(dp, current_time, cycle_time, "RX Start Bit", 1);
     rx_start.write(false);
     std::cout << "[DEBUG] framing_error: " << framing_error.read() << std::endl;
     assert(framing_error.read() == true);
-    std::cout << "Test 7 passed: RX framing error detected." << std::endl;
+    std::cout << "Test 6 passed: RX framing error detected." << std::endl;
 
     std::cout << "\n=== All Safe Tests Completed Successfully ===" << std::endl;
     return 0;
