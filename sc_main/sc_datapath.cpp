@@ -109,7 +109,7 @@ int sc_main(int argc, char* argv[]) {
     addr.write(0);
     mem_we.write(false);
 
-    std::cout << "\n=== TEST 1: Reset Verification ===" << std::endl;
+    std::cout << "\n=== TEST 1: Reset Verification (Safe Subset) ===" << std::endl;
     start.write(true);
     run_instruction(dp, current_time, cycle_time, "RESET", 2);
     start.write(false);
@@ -121,9 +121,10 @@ int sc_main(int argc, char* argv[]) {
     std::cout << "Test 1 passed: Reset state (flags only)." << std::endl;
 
     std::cout << "\n=== TEST 2: Line Control Register Decoding (8N1) ===" << std::endl;
-    data_in.write("00000011"); // LCR = 0x03 → 8 data bits
-    addr.write(34); // LINE_CONTROL_REG
-    run_instruction(dp, current_time, cycle_time, "Read LCR", 1);
+    data_in.write("00000011");  // LCR: 0x03 = 8 data bits, 1 stop bit, no parity
+    mem_we.write(false);
+    start.write(false);
+    run_instruction(dp, current_time, cycle_time, "Trigger compute to read LCR", 2);
     std::cout << "[DEBUG] ctrl_data_bits: " << ctrl_data_bits.read()
               << ", ctrl_stop_bits: " << ctrl_stop_bits.read()
               << ", ctrl_parity_enabled: " << ctrl_parity_enabled.read() << std::endl;
