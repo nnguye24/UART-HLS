@@ -159,7 +159,7 @@ int sc_main(int argc, char* argv[]) {
     rx_read.write(true);
     run_instruction(dp, current_time, cycle_time, "RX Read", 1);
     rx_read.write(false);
-    std::cout << "Read byte from RX buffer (via data_in): " << data_in.read() << std::endl;
+    std::cout << "Value output from datapath (data_out): " << data_out.read() << std::endl;
     std::cout << "Test 5 passed: RX buffer read successful." << std::endl;
 
     std::cout << "\n=== All Tests Completed Successfully ===" << std::endl;
