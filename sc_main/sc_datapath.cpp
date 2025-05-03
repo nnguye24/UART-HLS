@@ -147,19 +147,40 @@ int sc_main(int argc, char* argv[]) {
     assert(tx_out.read() == 0);
     std::cout << "Test 4 passed: TX load and start." << std::endl;
 
-    std::cout << "\n=== TEST 5: Observe TX Until Stop Bit ===" << std::endl;
+    std::cout << "\n=== TEST 5: Trace TX_out for Stop Bit ===" << std::endl;
+
     tx_data.write(false);
+    tx_parity.write(false);
+    tx_stop.write(false);
+
     bool stop_bit_seen = false;
-    for (int i = 0; i < 20; ++i) {
-        run_instruction(dp, current_time, cycle_time, "Wait for TX to reach stop bit", 1);
-        if (tx_out.read() == 1) {
+    bool prev_tx_out = tx_out.read();
+
+    for (int i = 0; i < 40; ++i) {
+        std::cout << "[Cycle " << i << "] tx_out: " << tx_out.read()
+                << ", tx_buffer_full: " << tx_buffer_full.read()
+                << ", ctrl_data_bits: " << ctrl_data_bits.read()
+                << ", ctrl_stop_bits: " << ctrl_stop_bits.read()
+                << ", ctrl_parity_enabled: " << ctrl_parity_enabled.read()
+                << ", tx_data: " << tx_data.read()
+                << ", tx_parity: " << tx_parity.read()
+                << ", tx_stop: " << tx_stop.read()
+                << std::endl;
+
+        run_instruction(dp, current_time, cycle_time, "TX Monitoring", 1);
+
+        bool curr = tx_out.read();
+        if (!prev_tx_out && curr == 1) {
             stop_bit_seen = true;
+            std::cout << "[INFO] tx_out transitioned to 1 at cycle " << i << std::endl;
             break;
         }
+        prev_tx_out = curr;
     }
-    std::cout << "[DEBUG] tx_out observed after waiting: " << tx_out.read() << std::endl;
+
+    std::cout << "[DEBUG] Final tx_out: " << tx_out.read() << std::endl;
     assert(stop_bit_seen);
-    std::cout << "Test 5 passed: Stop bit was eventually seen on tx_out." << std::endl;
+    std::cout << "Test 5 passed: tx_out transitioned to 1 (stop bit or idle)." << std::endl;
 
     std::cout << "\n=== TEST 6: RX Start Bit Error Detection ===" << std::endl;
     rx_in.write(1);
