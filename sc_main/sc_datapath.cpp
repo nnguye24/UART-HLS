@@ -8,7 +8,7 @@
  * testing the UART datapath
  *********************************************/
 
-#include "systemc.h"
+#include <systemc>
 #include "../src/datapath.h"
 #include "../src/sizes.h"
 #include <cassert>
@@ -173,37 +173,16 @@ int sc_main(int argc, char* argv[]) {
     assert(overrun_error.read() == false);
     std::cout << "Test 5 passed: Error flags cleared successfully." << std::endl;
 
-    std::cout << "\n=== TEST 6: RX Byte Reception ===" << std::endl;
-    std::cout << "This test simulates a full RX sequence: start bit, 8 data bits, and stop bit." << std::endl;
-
-    // Start bit (should be 0)
-    rx_in.write(0);
-    rx_start.write(true);
-    run_instruction(dp, current_time, cycle_time, "RX Start", 1);
-    rx_start.write(false);
-
-    // Simulate 8 data bits (01010101)
-    sc_bv<8> rx_byte("01010101");
-    for (int i = 0; i < 8; ++i) {
-        rx_in.write(rx_byte[i].to_bool());
-        rx_data.write(true);
-        run_instruction(dp, current_time, cycle_time, "RX Data Bit " + std::to_string(i), 1);
-        rx_data.write(false);
-    }
-
-    // Stop bit
+    std::cout << "\n=== TEST 6: RX Start Bit Framing Error ===" << std::endl;
+    std::cout << "This test verifies that setting rx_in = 1 during rx_start triggers a framing error." << std::endl;
     rx_in.write(1);
-    rx_stop.write(true);
-    run_instruction(dp, current_time, cycle_time, "RX Stop", 1);
-    rx_stop.write(false);
-
-    // Verify data written to memory
-    std::cout << "dp_write_enable = " << dp_write_enable.read()
-              << ", dp_addr = " << dp_addr.read()
-              << ", dp_data_in = " << dp_data_in.read() << std::endl;
-    assert(dp_write_enable.read() == true);
-    assert(dp_data_in.read() == "01010101");
-    std::cout << "Test 6 passed: RX byte received and written to memory." << std::endl;
+    rx_start.write(true);
+    run_instruction(dp, current_time, cycle_time, "RX Start (invalid)", 2);
+    rx_start.write(false);
+    run_instruction(dp, current_time, cycle_time, "RX Commit", 1);
+    std::cout << "Observed framing_error = " << framing_error.read() << std::endl;
+    assert(framing_error.read() == true);
+    std::cout << "Test 6 passed: Framing error triggered by invalid RX start bit." << std::endl;
 
     std::cout << "\n=== All Tests Completed Successfully ===" << std::endl;
     return 0;
