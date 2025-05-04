@@ -175,7 +175,6 @@ int sc_main(int argc, char* argv[]) {
 
     std::cout << "\n=== TEST 6: RX Byte Reception ===" << std::endl;
     std::cout << "This test simulates a full RX sequence: start bit, 8 data bits, and stop bit." << std::endl;
-    rx_buf_head = 0;  // hypothetical RX buffer index
 
     // Start bit (should be 0)
     rx_in.write(0);
