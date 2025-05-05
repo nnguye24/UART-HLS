@@ -19,6 +19,7 @@ SC_MODULE(controller) {
     sc_in<bool> tx_buffer_full;             // Port 4
     sc_in<bool> rx_buffer_empty;            // Port 5
     sc_in<bool> rx_in;                      // Port 6 - Serial input line
+    sc_in<bool> start_tx;                   // Port 26 - Start transmission signal
     
     // Error inputs
     sc_in<bool> parity_error;               // Port 7
@@ -72,6 +73,7 @@ SC_MODULE(controller) {
     sc_bit in_overrun_error;
     sc_bit in_parity_enabled;
     sc_bit in_parity_even;
+    sc_bit in_start_tx;
     sc_uint<3> in_data_bits;
     sc_uint<2> in_stop_bits;
     sc_uint<16> in_baud_divisor; 

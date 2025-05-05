@@ -7,6 +7,8 @@
  **************************************************************/
 
  #include "datapath.h"
+ #include "sizes.h"
+ #include <iostream>
  
  using namespace std;
  
@@ -34,68 +36,59 @@
  #define LCR_DLAB           0x80 // Bit 7: Divisor latch access bit
  
  void datapath::process() {
-    {
-        HLS_DEFINE_PROTOCOL("reset");
-        reset_datapath_clear_regs();
-    }
-    {
-        HLS_DEFINE_PROTOCOL("get_config");
-        get_config();
-    }
+     {
+         HLS_DEFINE_PROTOCOL("reset");
+         reset();
+     }
      
-    {       
-        HLS_DEFINE_PROTOCOL("wait");
-        wait();
-    }
-    {
-        HLS_DEFINE_PROTOCOL("update");
-        update_configuration();
-    }
+     {       
+         HLS_DEFINE_PROTOCOL("wait");
+         wait();
+     }
      
-    while(true) {
-        {       
-            HLS_DEFINE_PROTOCOL("wait");
-            in_start = start.read();
-            wait();
-        }
-        {
-            HLS_DEFINE_PROTOCOL("read_mem_we");
-      
-            // Read in the 
-            in_mem_we = mem_we.read(); 
-        }
+     while(true) {
+         // Read inputs
+         {
+             HLS_DEFINE_PROTOCOL("input");
+             read_inputs();
+         }
          
          // Check if memory write is active
-        if(!in_mem_we) {
-                {
-                    HLS_DEFINE_PROTOCOL("start");
-                    reset_datapath_clear_regs();
-                }
-            } else {
-                {
-                    HLS_DEFINE_PROTOCOL("input");
-                    read_inputs();
-                }
-
-                {
-                    HLS_DEFINE_PROTOCOL("datapath_ops");
-                    compute();
-                }
-        }
-        {
-            HLS_DEFINE_PROTOCOL("outputs");
-            write_outputs();
-        }
+         if(!in_mem_we) {
+             if(in_start) {
+                 {
+                     HLS_DEFINE_PROTOCOL("start");
+                     reset();
+                 }
+             } else {
+                 {
+                     HLS_DEFINE_PROTOCOL("datapath_ops");
+                     compute();
+                 }
+                 
+                 {
+                     HLS_DEFINE_PROTOCOL("output");
+                     commit();
+                     write_outputs();
+                 }
+             }
+         }
          
          // Wait for next cycle
-        {       
+         {       
              HLS_DEFINE_PROTOCOL("wait");
              wait();
-        }
-    }
-}
+         }
+         
+         // Additional wait for processing time
+         {       
+             HLS_DEFINE_PROTOCOL("wait");
+             wait();
+         }
+     }
+ }
  
- void datapath::reset_datapath_clear_regs() {
+ void datapath::reset() {
      load_tx_phase = false;
  
      // Reset transmit and receive registers
@@ -123,7 +116,8 @@
      out_dp_write_enable = false;
      
      // Reset baud rate generation
-     out_baud_divider = 0x0003;  // Default baud rate divisor
+     baud_divider = 0x0003;  // Default baud rate divisor
+     baud_counter = 0;
      
      // Reset configuration
      parity_enabled = false;
@@ -153,7 +147,7 @@
  
  void datapath::read_inputs() {
      // Read all input ports
-     // in_start = start.read();
+     in_start = start.read();
      in_mem_we = mem_we.read();
      in_load_tx = load_tx.read();
      in_load_tx2 = load_tx2.read();
@@ -188,36 +182,29 @@
      dp_data_in.write(out_dp_data_in);
      dp_addr.write(out_dp_addr);
      dp_write_enable.write(out_dp_write_enable);
-     baud_divisor.write(out_baud_divider);  // Added baud_divisor output
  }
  
  void datapath::compute() {
      // Reset logic
      if (rst.read()) {
-         reset_datapath_clear_regs();
+         reset();
          return;
      }
      
      // First, update configuration from memory map
-    //  get_config();
-    //  update_configuration();    // this placement might be a problem
-    //  // we want to constantly update the configuration so that it is up to date.
+     update_configuration();
      
      // Process TX and RX independently
      compute_tx();
      compute_rx();
  }
  
-
- void datapath::get_config(){
-    // sends out config address to request data from that register
-    // in_data_in should change in the next clock cycle(read)
-    out_addr = LINE_CONTROL_REG;
-
- }
  // New method to read and interpret configuration registers
  void datapath::update_configuration() {
-     // Read line control register
+     // Request configuration register values by setting address
+     out_addr = LINE_CONTROL_REG;
+     
+     // Read line control register - in real hardware this would have a delay
      sc_uint<DATA_W> lcr = in_data_in;
      
      // Extract configuration parameters
@@ -240,9 +227,7 @@
      sc_uint<DATA_W> baud_high = in_data_in;
      
      // Combine to form 16-bit baud rate divisor
-     out_baud_divider = (baud_high << 8) | baud_low;
-     // Baud_divider is what out baud counter counts up to
-     // currently don't have a baud counter. 
+     baud_divider = (baud_high << 8) | baud_low;
  }
  
  // TX compute method
@@ -255,7 +240,7 @@
      // Handle TX operations based on control signals
      if (in_load_tx) {
          if (tx_buf_head != tx_buf_tail) {
-             if (!load_tx_phase) {
+             if (in_load_tx) {
                  // First phase: Set up the memory address
                  unsigned int mem_addr = tx_buf_tail; // TX buffer starts at address 0
                  out_addr = mem_addr; // Set address to read from Memory
@@ -277,7 +262,7 @@
       
      if (in_tx_data) {
          // Send data bits (LSB first)
-         next_tx_out = tx_shift_register[0];    // tx_out is a TX pin
+         next_tx_out = tx_shift_register[0].get_bit(0);    // tx_out is a TX pin
          next_tx_shift_register = tx_shift_register >> 1;
      }
       
@@ -395,7 +380,7 @@
  void datapath::commit() {
      // TX updates
      out_tx_buffer_full = next_tx_buffer_full;
-     out_tx_out = next_tx_out;
+     out_tx_out = next_tx_out.to_bool();
      tx_shift_register = next_tx_shift_register;
      
      // Update TX bit counter
@@ -454,4 +439,14 @@
  bool datapath::tx_buffer_check() {
      // Check if TX buffer is full
      return ((tx_buf_head + 1) % TX_BUFFER_SIZE) == tx_buf_tail;
+ }
+ 
+ // New method to provide configuration to controller 
+ void datapath::sync_controller_config() {
+     // This is already done in update_configuration
+     // Just making sure all the controller config signals are updated
+     out_ctrl_parity_enabled = parity_enabled;
+     out_ctrl_parity_even = parity_even;
+     out_ctrl_data_bits = data_bits;
+     out_ctrl_stop_bits = stop_bits;
  }

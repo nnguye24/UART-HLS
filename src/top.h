@@ -15,19 +15,20 @@
  #include "datapath.h"
  #include "controller.h"
  #include "memory_map.h"
+ 
  SC_MODULE(top) {
    // Inputs from testbench
    sc_in<bool> clk;                        // Port 0
    sc_in<bool> rst;                        // Port 1
-   sc_in<sc_uint<DATA_W>> data_in;         // Port 2
-   sc_in<sc_uint<ADDR_W>> addr;            // Port 3
+   sc_in<sc_bv<DATA_W>> data_in;         // Port 2
+   sc_in<sc_bv<ADDR_W>> addr;            // Port 3
    sc_in<bool> chip_select;                // Port 4
    sc_in<bool> read_write;                 // Port 5
    sc_in<bool> write_enable;               // Port 6
    sc_in<bool> rx_in;                      // Port 7
- 
+   sc_in<bool> start_tx;
    // Outputs to testbench
-   sc_out<sc_uint<DATA_W>> data_out;       // Port 8
+   sc_out<sc_bv<DATA_W>> data_out;       // Port 8
    sc_out<bool> tx_out;                    // Port 9
    sc_out<bool> tx_buffer_full;            // Port 10
    sc_out<bool> rx_buffer_empty;           // Port 11
@@ -69,11 +70,11 @@
    sc_signal<sc_uint<16>> dp_to_ctrl_baud_divisor;
    
    // Memory map to datapath signals
-   sc_signal<sc_uint<DATA_W>> mem_to_dp_data;
+   sc_signal<sc_bv<DATA_W>> mem_to_dp_data;
    
    // Datapath to memory map signals
-   sc_signal<sc_uint<DATA_W>> dp_to_mem_data;
-   sc_signal<sc_uint<ADDR_W>> dp_to_mem_addr;
+   sc_signal<sc_bv<DATA_W>> dp_to_mem_data;
+   sc_signal<sc_bv<ADDR_W>> dp_to_mem_addr;
    sc_signal<bool> dp_to_mem_write_enable;
    
    // Internal signals for start and memory write enable
@@ -90,7 +91,7 @@
    bool in_rx_in;
    bool in_start;
    bool in_mem_we;
- 
+  bool in_start_tx;
    // Top-level methods
    void process();
    void read_inputs();
@@ -152,6 +153,7 @@
      controller_inst.tx_buffer_full(dp_to_ctrl_tx_buffer_full);
      controller_inst.rx_buffer_empty(dp_to_ctrl_rx_buffer_empty);
      controller_inst.rx_in(rx_in);
+     controller_inst.start_tx(start_tx);
      controller_inst.parity_error(dp_to_ctrl_parity_error);
      controller_inst.framing_error(dp_to_ctrl_framing_error);
      controller_inst.overrun_error(dp_to_ctrl_overrun_error);

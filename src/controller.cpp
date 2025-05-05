@@ -6,6 +6,7 @@
  * UART Controller FSM implementation
  **************************************************************/
 #include "controller.h"
+#include <iostream>
 
 using namespace std;
 
@@ -41,7 +42,7 @@ void controller::process() {
                 }
                 
                 {
-                    HLS_DEFINE_PROTOCOL("output"); 
+                    HLS_DEFINE_PROTOCOL("output");
                     write_outputs();
                 }
             }
@@ -68,8 +69,9 @@ void controller::reset_control_clear_regs() {
     rx_state = RX_IDLE;
     rx_next_state = RX_IDLE;
     
-    // baud_counter
+    //baud counter
     baud_counter = 1;
+
     // Reset counters and flags
     tx_bit_counter = 0;
     rx_bit_counter = 0;
@@ -108,7 +110,9 @@ void controller::read_inputs() {
     in_parity_error = parity_error.read();
     in_framing_error = framing_error.read();
     in_overrun_error = overrun_error.read();
-    in_baud_divisor = baud_divisor.read();  // what we count up to with baud counter
+    in_baud_divisor = baud_divisor.read();
+    in_start_tx = start_tx.read();
+    
     // Read configuration
     in_parity_enabled = parity_enabled.read();
     in_parity_even = parity_even.read();
@@ -117,10 +121,9 @@ void controller::read_inputs() {
 }
 
 void controller::controller_fsm() {
-
     // Skip if memory write is active
-if(baud_counter >= in_baud_divisor){
-    baud_counter = 0;
+ if(baud_counter >= in_baud_divisor){
+	baud_counter = 0;
     if(in_mem_we) {
         return;
     }
@@ -141,11 +144,13 @@ if(baud_counter >= in_baud_divisor){
         // Update current state from next state
         tx_state = tx_next_state;
         rx_state = rx_next_state;
-        
+        cout << "TX State: " << tx_state << endl;
+	    cout << "RX State: " << rx_state << endl; 
         // TX FSM logic
         switch(tx_state.to_uint()) {
             case TX_IDLE:
-                if(!in_tx_buffer_full) {
+		if(in_start_tx) {
+			std::cout << "Start TX triggered" << std::endl;
                     out_load_tx = true;
                     tx_next_state = LOAD_TX2;
                 } else {
@@ -154,11 +159,13 @@ if(baud_counter >= in_baud_divisor){
                 break;
                 
             case LOAD_TX2:
-                out_load_tx2 = true;
+		std::cout << "LOAD TX2" << std::endl;
+	             out_load_tx2 = true;
                 tx_next_state = TX_START_BIT;
                 break;
                 
             case TX_START_BIT:
+            std::cout << "TX START BIT " << std::endl;
                 out_tx_start = true;
                 tx_next_state = TX_DATA_BITS;
                 tx_bit_counter = 0;
@@ -166,14 +173,15 @@ if(baud_counter >= in_baud_divisor){
                 
             case TX_DATA_BITS:
                 out_tx_data = true;
-                
                 if(tx_bit_counter >= in_data_bits - 1) {
+			std::cout << "tx_bit hit" << std::endl; 
                     if(in_parity_enabled) {
                         tx_next_state = TX_PARITY_BIT;
                     } else {
                         tx_next_state = TX_STOP_BIT;
                     }
                 } else {
+		 	std::cout << "else hit " << std::endl;
                     tx_next_state = TX_DATA_BITS;
                     tx_bit_counter++;
                 }
@@ -326,12 +334,7 @@ bool controller::test_reset_controller() {
         cout << "rx_next_state not reset: " << rx_next_state << endl;
         return false;
     }
-    if(tx_buffer_full){
-        std::cout << "TX_BUFFER_NOT RESET" << std::endl;
-    }
-    if(!rx_buffer_empty){
-        std::cout < "RX_BUFFER_NOT_RESET" << std::endl;
-    }
+    
     
     // Check all outputs are reset
     if(out_load_tx) return false;

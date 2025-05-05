@@ -68,10 +68,17 @@
      }
      
      while(true) {
-         // Read inputs
+         // Read inputs first half
          {
-             HLS_DEFINE_PROTOCOL("input");
-             read_inputs();
+             HLS_DEFINE_PROTOCOL("first_half");
+	     in_addr = addr.read();
+	     in_data_in = data_in.read();
+	     in_write_enable = write_enable.read();
+	     in_dp_data_in = dp_data_in.read();
+	     in_dp_addr = dp_addr.read();
+	     in_dp_write_enable = dp_write_enable.read();
+	     in_chip_select = chip_select.read(); 
+	     in_read_write = read_write.read();             
          }
          
          // Compute memory operations
@@ -79,11 +86,15 @@
              HLS_DEFINE_PROTOCOL("compute");
              compute();
          }
+         {       
+             HLS_DEFINE_PROTOCOL("wait");
+             wait();
+         }      
          
          // Update outputs and commit changes
          {
              HLS_DEFINE_PROTOCOL("output");
-             commit();
+             // commit();
              write_outputs();
          }
          
@@ -92,12 +103,24 @@
              HLS_DEFINE_PROTOCOL("wait");
              wait();
          }
-         
-         // Additional wait for processing time
+	 {       
+             HLS_DEFINE_PROTOCOL("input");
+             read_inputs();
+         }
+	 {       
+             HLS_DEFINE_PROTOCOL("compute");
+             compute();
+         }
+	 // {
+	 // HLS_DEFINE_PROTOCOL("output");
+	 //  commit();
+	 //  write_outputs();
+	 // }
          {       
              HLS_DEFINE_PROTOCOL("wait");
              wait();
          }
+         
      }
  }
  
@@ -108,14 +131,14 @@
      }
      
      // Initialize default configuration registers
-     Memory[BAUD_RATE_LOW] = 0x03;     // Default baud rate divisor: 9600 baud
-     Memory[BAUD_RATE_HIGH] = 0x00;    // (assuming 1.8432MHz clock)
-     Memory[LINE_CONTROL_REG] = 0x03;  // 8 data bits, 1 stop bit, no parity
-     Memory[FIFO_CONTROL_REG] = 0x01;  // Enable FIFOs
+     Memory[BAUD_RATE_LOW] = sc_bv<DATA_W>(0x03);     // Default baud rate divisor: 9600 baud
+     Memory[BAUD_RATE_HIGH] = sc_bv<DATA_W>(0x00);    // (assuming 1.8432MHz clock)
+     Memory[LINE_CONTROL_REG] = sc_bv<DATA_W>(0x03);  // 8 data bits, 1 stop bit, no parity
+     Memory[FIFO_CONTROL_REG] = sc_bv<DATA_W>(0x01);  // Enable FIFOs
      
      // Initialize output values
-     out_data_out = 0;
-     out_dp_data_out = 0;
+     data_out.write(0);
+     dp_data_out.write(0);
  }
  
  void memory_map::read_inputs() {
@@ -124,11 +147,12 @@
 
      in_data_in = data_in.read();
      in_addr = addr.read();
-
-     in_chip_select = chip_select.read();
-
-     in_read_write = read_write.read();
      in_write_enable = write_enable.read();
+     
+     in_chip_select = chip_select.read();
+     in_read_write = read_write.read();
+    
+
      in_dp_data_in = dp_data_in.read();
      in_dp_addr = dp_addr.read();
      in_dp_write_enable = dp_write_enable.read();
@@ -153,32 +177,30 @@
      
      // Handle datapath memory access (higher priority)
      if (in_dp_write_enable) {
-         if (in_dp_addr < RAM_SIZE) {
-             Memory[in_dp_addr] = in_dp_data_in;
+         if (in_dp_addr.to_uint() < RAM_SIZE) {
+             Memory[in_dp_addr.to_uint()] = in_dp_data_in;
          }
-     }
-     
-     // CPU memory access
-     if (in_chip_select) {
+     } else if (in_chip_select) {// CPU WRITE next priority. 
          if (!in_read_write) {
              // Read operation
-             if (in_addr < RAM_SIZE) {
-                 out_data_out = Memory[in_addr];
+             if (in_addr.to_uint() < RAM_SIZE) {
+                 
              } else {
                  // Invalid address
                  out_data_out = 0xFF;
              }
          } else if (in_write_enable) {
              // Write operation
-             if (in_addr < RAM_SIZE) {
-                 Memory[in_addr] = in_data_in;
+             if (in_addr.to_uint() < RAM_SIZE) {
+                 Memory[in_addr.to_uint()] = in_data_in;
              }
          }
      }
+     out_data_out = Memory[in_addr.to_uint()];
      
      // Always update datapath data output regardless of read/write operations
-     if (in_dp_addr < RAM_SIZE) {
-         out_dp_data_out = Memory[in_dp_addr];
+     if (in_dp_addr.to_uint() < RX_BUFFER_START) {
+         out_dp_data_out = Memory[in_dp_addr.to_uint()];
      } else {
          out_dp_data_out = 0;
      }
@@ -191,7 +213,7 @@
  
  void memory_map::update_status_registers() {
      // Update line status register
-     sc_uint<DATA_W> line_status = 0;
+     sc_bv<DATA_W> line_status = 0;
      
      // Set data ready flag if RX buffer not empty
      if (!in_rx_buffer_empty) {
@@ -218,7 +240,7 @@
      Memory[LINE_STATUS_REG] = line_status;
      
      // Update FIFO status register
-     sc_uint<DATA_W> fifo_status = 0;
+     sc_bv<DATA_W> fifo_status = 0;
      
      // Set TX full flag
      if (in_tx_buffer_full) {
@@ -234,39 +256,14 @@
      Memory[FIFO_STATUS_REG] = fifo_status;
  }
  
- // Helper methods for accessing specific memory regions
- sc_uint<DATA_W> memory_map::get_tx_buffer(unsigned int index) {
-     if (index < TX_BUFFER_SIZE) {
-         return Memory[TX_BUFFER_START + index];
-     }
-     return 0;
- }
- 
- void memory_map::set_tx_buffer(unsigned int index, sc_uint<DATA_W> value) {
-     if (index < TX_BUFFER_SIZE) {
-         Memory[TX_BUFFER_START + index] = value;
-     }
- }
- 
- sc_uint<DATA_W> memory_map::get_rx_buffer(unsigned int index) {
-     if (index < RX_BUFFER_SIZE) {
-         return Memory[RX_BUFFER_START + index];
-     }
-     return 0;
- }
- 
- void memory_map::set_rx_buffer(unsigned int index, sc_uint<DATA_W> value) {
-     if (index < RX_BUFFER_SIZE) {
-         Memory[RX_BUFFER_START + index] = value;
-     }
- }
- 
- // Helper methods for memory access
- bool memory_map::is_valid_address(sc_uint<ADDR_W> address) {
-     return (address < RAM_SIZE);
- }
+ // This section was intentionally removed as these helper methods
+ // were not used anywhere in the codebase
+
  
  void memory_map::clear_errors() {
      // Clear error bits in the line status register
-     Memory[LINE_STATUS_REG] &= ~(LSR_PARITY_ERROR | LSR_FRAMING_ERROR | LSR_OVERRUN_ERROR);
+     // First convert to integer, perform operation, then back to bit vector if needed
+     int current_value = Memory[LINE_STATUS_REG].to_uint();
+     current_value &= ~(LSR_PARITY_ERROR | LSR_FRAMING_ERROR | LSR_OVERRUN_ERROR);
+     Memory[LINE_STATUS_REG] = sc_bv<DATA_W>(current_value);
  }

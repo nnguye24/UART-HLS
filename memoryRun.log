@@ -1,0 +1,922 @@
+xrun(64): 24.03-s005: (c) Copyright 1995-2024 Cadence Design Systems, Inc.
+TOOL:	xrun(64)	24.03-s005: Started on May 04, 2025 at 15:29:07 EDT
+xrun
+	-sysc
+	./src/memory_map.cpp
+	./sc_main/sc_memory_map.cpp
+	-I./src
+	-I./sc_main
+	-I/apps/STRATUS2302/23.02.006/share/stratus/include/
+	-input wave.tcl
+	-access rwc
+	-cdslib /projects/nd/TSMC_PDK_PATH/tsmc/180MSRFG/STD_CELL/tcb018gbwp7t_290a/TSMCHOME/digital/Back_End/cdk/tcb018gbwp7t_290a/cds.lib
+$CDSROOT = /apps/XCELIUM2403/24.03.005
+$TESTDIR = /projects/nd/gnw/uart/HLS
+
+TOOL:	xmsc(64)	24.03-s005
+xmsc C++ parameters: 
+	xmsc -COMPILER $CDSROOT/tools/cdsgcc/gcc/9.3/bin/g++ 
+	-f ./xcelium.d/run.lnx8664.24.03.d/xmsc_run/xmsc_obj/xmsc.args
+	-MANUAL 
+	-CFLAGS "-DXMSC
+		-DNCSC
+		-I$CDSROOT/tools/systemc/include_pch
+		-I$CDSROOT/tools/tbsc/include
+		-I$CDSROOT/tools/vic/include
+		-I$CDSROOT/tools/methodology/OVM/CDNS-2.1.2/sc/src
+		-I$CDSROOT/tools/methodology/UVM/CDNS-1.1d/sc/sc
+		-I$CDSROOT/tools/methodology/UVM/CDNS-1.1d/ml/sc
+		-I$CDSROOT/tools/systemc/include/cci
+		-I$CDSROOT/tools/systemc/include/factory
+		-I$CDSROOT/tools/systemc/include/tlm2
+		-fPIC
+		-D_GLIBCXX_USE_CXX11_ABI=1 -c
+		-x c++  -Wall
+		-I$TESTDIR/src
+		-I$TESTDIR/sc_main
+		-I/apps/STRATUS2302/23.02.006/share/stratus/include/
+		-I$CDSROOT/tools/include
+		-I$CDSROOT/tools/inca/include
+		-pipe"
+
+make: `xcelium.d/run.lnx8664.24.03.d/xmsc_run/xmsc_obj/memory_map.o' is up to date.
+
+xmsc: compiling $TESTDIR/./sc_main/sc_memory_map.cpp
+$TESTDIR/./sc_main/../src/sizes.h:24: warning: "DATA_W" redefined
+$TESTDIR/./sc_main/../src/sizes.h:25: warning: "ADDR_W" redefined
+$TESTDIR/./sc_main/../src/sizes.h:28: warning: "RAM_SIZE" redefined
+
+building library run.so
+
+=== INITIAL RESET SEQUENCE ===
+
+--- TEST 1: LINE_CONTROL_REG WRITE/READ ---
+Write 0x02 to LINE_CONTROL_REG
+Instruction Cycle start time 0 s
+	Elaborating the design hierarchy:
+	Top level design units:
+		sc_main
+	Building instance specific data structures.
+	Design hierarchy summary:
+		                 Instances  Unique
+		Simulation timescale:  1ps
+
+	SystemC Design Summary:
+		                  Instances
+		sc_modules:               2
+		sc_ports:                15
+		sc_signals:              15
+		sc_threads:               1
+	Writing initial simulation snapshot: worklib.sc_main:sc_module
+Loading snapshot worklib.sc_main:sc_module .................... Done
+=== INITIAL RESET SEQUENCE ===
+
+--- TEST 1: LINE_CONTROL_REG WRITE/READ ---
+Write 0x02 to LINE_CONTROL_REG
+Instruction Cycle start time 0 s
+xmsim: *E,IONOEN: file does not exist, wave.tcl.
+xcelium> ^C
+xcelium> run
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100010
+  in_data_in = 0000000000000010
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000000000011
+
+ 
+  CPU writing 0000000000000010 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100010
+ updating status registers
+New Line Status Register: 0000000001100000
+  Writing -----------------
+  Memory after = 0000000000000010
+  out_data_out  = 0000000000000010
+  in_addr  = 0000000000100010
+
+Info: (I1102) default timescale unit used for tracing: 1 ps (memory_map_trace.vcd)
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100010
+  in_data_in = 0000000000000010
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000000000010
+
+ 
+  CPU writing 0000000000000010 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100010
+ Testbench Debug----------------- 
+ addr:  0000000000100010
+ chip.select():  1
+ Memory[34]:  0000000000000010
+ data_out.read():  0000000000000010
+TEST 1 PASSED Result: LINE_CONTROL_REG == 0x02
+
+--- TEST 2: TX BUFFER[3] CPU WRITE/READ ---
+Write 0x5A to TX buffer[3]
+Instruction Cycle start time 10 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000000000000
+
+ 
+  CPU writing 0000000010100101 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000010100101 ADDY: 0000000000000011
+ updating status registers
+New Line Status Register: 0000000001100000
+  Writing -----------------
+  Memory after = 0000000010100101
+  out_data_out  = 0000000010100101
+  in_addr  = 0000000000000011
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000010100101
+
+ 
+  CPU writing 0000000010100101 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000010100101 ADDY: 0000000000000011
+Read back TX buffer[3]
+Instruction Cycle start time 20 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000010100101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000010100101 ADDY: 0000000000000011
+ updating status registers
+New Line Status Register: 0000000001100000
+  Writing -----------------
+  Memory after = 0000000010100101
+  out_data_out  = 0000000010100101
+  in_addr  = 0000000000000011
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000000000000
+  Memory before = 0000000010100101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000010100101 ADDY: 0000000000000011
+Result: TX buffer[3] == 0xA5
+
+--- TEST 3: RX BUFFER[5] DATAPATH WRITE / CPU READ ---
+DP writes to 0xC3 to RX buffer[5]
+Instruction Cycle start time 30 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 0
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 1
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000010100101
+
+ 
+DP writing to memory
+ updating status registers
+New Line Status Register: 0000000001100000
+  Writing -----------------
+  Memory after = 0000000010100101
+  out_data_out  = 0000000010100101
+  in_addr  = 0000000000000011
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 0
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 1
+  in_addr = 0000000000000011
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000010100101
+
+ 
+DP writing to memory
+CPU reads RX buffer[5]
+Instruction Cycle start time 40 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000010101
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000011000011
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000011000011 ADDY: 0000000000010101
+ updating status registers
+New Line Status Register: 0000000001100000
+  Writing -----------------
+  Memory after = 0000000011000011
+  out_data_out  = 0000000011000011
+  in_addr  = 0000000000010101
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000010101
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000011000011
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000011000011 ADDY: 0000000000010101
+data_out: 0000000011000011
+Result: RX buffer[5] == 0xC3
+
+--- TEST 4: LINE_STATUS_REG STATUS FLAGS ---
+Write LSR with no errors
+Instruction Cycle start time 50 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000001100000
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000001100000 ADDY: 0000000000100110
+ updating status registers
+New Line Status Register: 0000000000000001
+  Writing -----------------
+  Memory after = 0000000000000001
+  out_data_out  = 0000000001100000
+  in_addr  = 0000000000100110
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100110
+data_out: 0000000001100000
+Read LSR with no errors
+Instruction Cycle start time 60 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100110
+ updating status registers
+New Line Status Register: 0000000000000001
+  Writing -----------------
+  Memory after = 0000000000000001
+  out_data_out  = 0000000000000001
+  in_addr  = 0000000000100110
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100110
+data_out: 0000000000000001
+Result: LSR == DATA_READY only
+Read LSR with error indicator = true
+Instruction Cycle start time 70 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100110
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000000001101
+  out_data_out  = 0000000000000001
+  in_addr  = 0000000000100110
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000001101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000001101 ADDY: 0000000000100110
+Read LSR with error indicator = true
+Instruction Cycle start time 80 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000001101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000001101 ADDY: 0000000000100110
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000000001101
+  out_data_out  = 0000000000001101
+  in_addr  = 0000000000100110
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100110
+  in_data_in = 0000000010100101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000001101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000001101 ADDY: 0000000000100110
+Result: LSR includes PARITY and FRAMING errors
+
+--- TEST 5: FIFO_CONTROL_REG & SCRATCH_REG WRITE/READ ---
+Write 0xAA to FIFO_CONTROL_REG
+Instruction Cycle start time 90 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100011
+  in_data_in = 0000000010101010
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  CPU writing 0000000010101010 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000010101010 ADDY: 0000000000100011
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000010101010
+  out_data_out  = 0000000010101010
+  in_addr  = 0000000000100011
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100011
+  in_data_in = 0000000010101010
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000010101010
+
+ 
+  CPU writing 0000000010101010 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000010101010 ADDY: 0000000000100011
+Write 0x55 to SCRATCH_REG1
+Instruction Cycle start time 100 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100100
+  in_data_in = 0000000001010101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000000
+
+ 
+  CPU writing 0000000001010101 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000001010101 ADDY: 0000000000100100
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000001010101
+  out_data_out  = 0000000001010101
+  in_addr  = 0000000000100100
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100100
+  in_data_in = 0000000001010101
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000001010101
+
+ 
+  CPU writing 0000000001010101 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000001010101 ADDY: 0000000000100100
+Write 0xFF to SCRATCH_REG2
+Instruction Cycle start time 110 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100101
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000000
+
+ 
+  CPU writing 0000000011111111 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000011111111 ADDY: 0000000000100101
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000011111111
+  out_data_out  = 0000000011111111
+  in_addr  = 0000000000100101
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000000100101
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000011111111
+
+ 
+  CPU writing 0000000011111111 to Memory----------- 
+  Reading from Memory----------- 
+VAL: 0000000011111111 ADDY: 0000000000100101
+READ BACK FIFO_CONTROL_REG
+Instruction Cycle start time 120 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100011
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000010101010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000010101010 ADDY: 0000000000100011
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000010101010
+  out_data_out  = 0000000010101010
+  in_addr  = 0000000000100011
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100011
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000010101010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000010101010 ADDY: 0000000000100011
+Result: FIFO_CONTROL_REG == 0xAA
+READ BACK SCRATCH_REG1
+Instruction Cycle start time 130 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100100
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000001010101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000001010101 ADDY: 0000000000100100
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000001010101
+  out_data_out  = 0000000001010101
+  in_addr  = 0000000000100100
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100100
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000001010101
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000001010101 ADDY: 0000000000100100
+Result: SCRATCH_REG1 == 0x55
+Read back SCRATCH_REG2
+Instruction Cycle start time 140 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100101
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000011111111
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000011111111 ADDY: 0000000000100101
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000011111111
+  out_data_out  = 0000000011111111
+  in_addr  = 0000000000100101
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100101
+  in_data_in = 0000000011111111
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000011111111
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000011111111 ADDY: 0000000000100101
+Result: SCRATCH_REG2 == 0xFF
+
+--- TEST 6: INVALID-ADDRESS HANDLING ---
+Attempt write to invalid address
+Instruction Cycle start time 150 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000100000101
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 
+
+ 
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 
+  out_data_out  = 0000000011111111
+  in_addr  = 0000000100000101
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 1
+  in_write_enable = 1
+  in_dp_write_enable = 0
+  in_addr = 0000000100000101
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 
+
+ 
+Result: Invalid-address read returns 0xFF
+
+--- TEST 7: FIFO_STATUS_REG TX_FULL / RX_EMPTY ---
+READ FSR with TX no full, RX empty
+Instruction Cycle start time 160 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100111
+ updating status registers
+New Line Status Register: 0000000001101100
+  Writing -----------------
+  Memory after = 0000000000000010
+  out_data_out  = 0000000000000001
+  in_addr  = 0000000000100111
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100111
+READ FSR with TX no full, RX empty
+Instruction Cycle start time 170 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100111
+ updating status registers
+New Line Status Register: 0000000001101100
+  Writing -----------------
+  Memory after = 0000000000000010
+  out_data_out  = 0000000000000010
+  in_addr  = 0000000000100111
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100111
+data_out: 0000000000000010
+FSR_RX_EMPTY: 2
+Result: FSR == RX_EMPTY only
+READ FSR with TX full, RX not empt... First
+Instruction Cycle start time 180 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000010
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000010 ADDY: 0000000000100111
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000000000001
+  out_data_out  = 0000000000000010
+  in_addr  = 0000000000100111
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100111
+data_out Instruction: 0000000000000010
+READ FSR with TX full, RX not  empty... Second
+Instruction Cycle start time 190 ns
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100111
+ updating status registers
+New Line Status Register: 0000000000001101
+  Writing -----------------
+  Memory after = 0000000000000001
+  out_data_out  = 0000000000000001
+  in_addr  = 0000000000100111
+  Reading -------------- 
+ 
+ 
+Compute -------------------
+  in_chip_select = 1
+  in_read_write = 0
+  in_write_enable = 0
+  in_dp_write_enable = 0
+  in_addr = 0000000000100111
+  in_data_in = 0000000011011110
+  in_dp_data_in = 0000000011000011
+  Memory before = 0000000000000001
+
+ 
+  Reading from Memory----------- 
+VAL: 0000000000000001 ADDY: 0000000000100111
+data_out: 0000000000000001
+FSR_TX_FULL: 1
+Result: FSR == TX_FULL only
+
+All memory_map tests 1-7 passed successfully.
+TOOL:	xrun(64)	24.03-s005: Exiting on May 04, 2025 at 15:29:23 EDT  (total: 00:00:16)
